@@ -4,7 +4,16 @@
 @tailwind utilities;
 
 @theme {
-   --color-primary: #3a1078;
-   --color-secondary: #4e31aa;
-   --color-accent: #3795bd;
+   --color-primary: #2c3e9e;
+   --color-secondary: #9b8cff;
+   --color-accent: #ff6f61;
+   --color-neutral: #f7f7f7;
+   --color-paragraph: #2e2e2e;
+   --color-label: #616161;
+   --color-icon: #9e9e9e;
+   --color-success: green;
+   --color-error: rgb(239 68 68);
+}
+input[type="password"]::-ms-reveal {
+   display: none;
 }

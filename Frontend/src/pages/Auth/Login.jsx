@@ -1,14 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import {
-   Mail,
-   Lock,
-   Eye,
-   EyeOff,
-   Loader,
-   AlertCircle,
-   CheckCircle,
-} from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, Loader, AlertCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const Login = () => {
@@ -26,7 +18,6 @@ const Login = () => {
    });
 
    //Validation functions
-
    const validateEmail = (email) => {
       if (!email.trim()) return "Email is required";
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -97,36 +88,33 @@ const Login = () => {
       }
    };
 
-   if (formState.success) {
-      return (
-         <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-            <motion.div
-               initial={{ opacity: 0, scale: 0.9 }}
-               animate={{ opacity: 1, scale: 1 }}
-               className="bg-white p-8 rounded-xl shadow-lg max-w-md w-full text-center"
-            >
-               <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4 " />
-               <h2 className="text-2xl font-bold text-primary mb-2">
-                  Welcome Back!
-               </h2>
-               <p className="text-grey-600 mb-4">
-                  You have been successfully logged in.
-               </p>
-               <div className="animate-spin w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full mx-auto">
-                  <p className="text-sm text-gray-500 mt-2">
-                     Redirecting to your dashboard...
-                  </p>
-               </div>
-            </motion.div>
-         </div>
-      );
-   }
+   // if (formState.success) {
+   //    return (
+   //       <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+   //          <motion.div
+   //             initial={{ opacity: 0, scale: 0.9 }}
+   //             animate={{ opacity: 1, scale: 1 }}
+   //             className="bg-white p-8 rounded-xl shadow-lg max-w-md w-full text-center"
+   //          >
+   //             <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4 " />
+   //             <h2 className="text-2xl font-bold text-primary mb-2">
+   //                Welcome Back!
+   //             </h2>
+   //             <p className="text-gray-600 mb-4">
+   //                You have been successfully logged in.
+   //             </p>
+   //             <div className="animate-spin w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full mx-auto">
+   //                <p className="text-sm text-gray-500 mt-2">
+   //                   Redirecting to your dashboard...
+   //                </p>
+   //             </div>
+   //          </motion.div>
+   //       </div>
+   //    );
+   // }
 
    return (
-      <div
-         className="flex justify-center items-center h-screen"
-         style={{ backgroundColor: "#F7F7F8" }}
-      >
+      <div className="flex justify-center items-center h-screen bg-neutral">
          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -137,14 +125,14 @@ const Login = () => {
                <h2 className="text-3xl font-bold text-center text-primary mb-4">
                   Welcome Back!
                </h2>
-               <p className="text-center text-gray-500 mb-6">
+               <p className="text-center text-paragraph mb-6">
                   Sign in to your account to continue
                </p>
 
                <form onSubmit={handleLogin} className="space-y-4">
                   {/*Email*/}
                   <div>
-                     <label className="block p-2 text-primary font-bold">
+                     <label className="block p-2 text-primary font-md">
                         Email Address
                      </label>
                      <div className="relative">
@@ -153,7 +141,7 @@ const Login = () => {
                            size={20}
                         />
                         <input
-                           type="email"
+                           type="text"
                            name="email"
                            placeholder="Enter your email"
                            value={formData.email}
@@ -166,7 +154,7 @@ const Login = () => {
                         />
                      </div>
                      {formState.errors.email && (
-                        <p className="text-red-500 text-sm mt-1 flex items-center">
+                        <p className="text-error text-sm mt-1 flex items-center">
                            <AlertCircle className="w-4 h-4 mr-1" />
                            {formState.errors.email}
                         </p>
@@ -175,7 +163,7 @@ const Login = () => {
 
                   {/*Password*/}
                   <div>
-                     <label className="block p-2 text-primary font-bold">
+                     <label className="block p-2 text-primary font-medium">
                         Password
                      </label>
                      <div className="relative">
@@ -206,24 +194,31 @@ const Login = () => {
                            className="absolute right-3 top-1/2 -translate-y-1/2 transform text-gray-400 hover:text-gray-600"
                         >
                            {formState.showPassword ? (
-                              <EyeOff className="w-5 h-5" />
-                           ) : (
                               <Eye className="w-5 h-5" />
+                           ) : (
+                              <EyeOff className="w-5 h-5" />
                            )}
                         </button>
                      </div>
                      {formState.errors.password && (
-                        <p className="text-red-500 text-sm mt-1 flex items-center">
+                        <p className="text-error text-sm mt-1 flex items-center">
                            <AlertCircle className="w-4 h-4 mr-1" />
                            {formState.errors.password}
                         </p>
                      )}
                   </div>
+                  <div className="flex items-center space-x-2">
+                     <input type="checkbox" />
+                     <label className="">Remember me</label>
+                     <label className="ml-auto text-primary">
+                        Forgot password?
+                     </label>
+                  </div>
 
                   {/*Submit Error*/}
                   {formState.errors.submit && (
                      <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                        <p className="text-red-500 text-sm mt-1 flex items-center">
+                        <p className="text-error text-sm mt-1 flex items-center">
                            <AlertCircle className="w=4 h-4 mr-2" />
                            {formState.errors.submit}
                         </p>
