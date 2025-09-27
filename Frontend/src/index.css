@@ -11,8 +11,9 @@
    --color-paragraph: #2e2e2e;
    --color-label: #616161;
    --color-icon: #9e9e9e;
+   --color-outline: #e0e0e0;
    --color-success: green;
-   --color-error: rgb(239 68 68);
+   --color-error: #f44336;
 }
 input[type="password"]::-ms-reveal {
    display: none;

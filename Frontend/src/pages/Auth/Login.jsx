@@ -119,7 +119,7 @@ const Login = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            className=""
+            className="w-full flex justify-center"
          >
             <div className="w-md max-w-md bg-white p-10 rounded-xl shadow-lg">
                <h2 className="text-3xl font-bold text-center text-primary mb-4">
@@ -132,7 +132,10 @@ const Login = () => {
                <form onSubmit={handleLogin} className="space-y-4">
                   {/*Email*/}
                   <div>
-                     <label className="block p-2 text-primary font-md">
+                     <label
+                        htmlFor="email"
+                        className="block p-2 text-primary font-md"
+                     >
                         Email Address
                      </label>
                      <div className="relative">
@@ -141,15 +144,16 @@ const Login = () => {
                            size={20}
                         />
                         <input
+                           id="email"
                            type="text"
                            name="email"
-                           placeholder="Enter your email"
+                           placeholder="your@email.com"
                            value={formData.email}
                            onChange={handleInputChange}
                            className={`w-full p-2 pl-10 rounded-md border ${
                               formState.errors.email
-                                 ? "border-red-500"
-                                 : "border-gray-300"
+                                 ? "border-error"
+                                 : "border-outline"
                            } focus:outline-none focus:ring-2 focus:ring-accent`}
                         />
                      </div>
@@ -163,7 +167,10 @@ const Login = () => {
 
                   {/*Password*/}
                   <div>
-                     <label className="block p-2 text-primary font-medium">
+                     <label
+                        htmlFor="password"
+                        className="block p-2 text-primary font-medium"
+                     >
                         Password
                      </label>
                      <div className="relative">
@@ -172,6 +179,7 @@ const Login = () => {
                            size={20}
                         />
                         <input
+                           id="password"
                            type={formState.showPassword ? "text" : "password"}
                            name="password"
                            placeholder="Enter your password"
@@ -179,8 +187,8 @@ const Login = () => {
                            onChange={handleInputChange}
                            className={`w-full p-2 pl-10 rounded-md border ${
                               formState.errors.password
-                                 ? "border-red-500"
-                                 : "border-gray-300"
+                                 ? "border-error"
+                                 : "border-outline"
                            } focus:outline-none focus:ring-2 focus:ring-accent`}
                         />
                         <button
