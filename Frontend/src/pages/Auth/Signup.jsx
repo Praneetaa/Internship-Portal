@@ -5,25 +5,30 @@ import {
    EyeOff,
    User,
    Building,
-   Loader,
    AlertCircle,
    Upload,
+   Loader,
 } from "lucide-react";
 import { motion } from "framer-motion";
 
 const userRoles = { CANDIDATE: "candidate", ORGANIZATION: "organization" };
 
+//Helper function to avoid repeating form resets
+const getInitialFormData = (role) => ({
+   fullName: "",
+   companyName: "",
+   companyEmail: "",
+   personalEmail: "",
+   password: "",
+   confirmPassword: "",
+   role,
+   avatar: null,
+});
+
 const Signup = () => {
-   const [formData, setFormData] = useState({
-      fullName: "",
-      companyName: "",
-      companyEmail: "",
-      personalEmail: "",
-      password: "",
-      confirmPassword: "",
-      role: userRoles.CANDIDATE,
-      avatar: null,
-   });
+   const [formData, setFormData] = useState(
+      getInitialFormData(userRoles.CANDIDATE)
+   );
 
    const [formState, setFormState] = useState({
       loading: false,
@@ -41,21 +46,52 @@ const Signup = () => {
          ...prev,
          [name]: value,
       }));
+      if (formState.errors[name]) {
+         setFormState((prev) => ({
+            ...prev,
+            errors: { ...prev.errors, [name]: undefined },
+         }));
+      }
+
+      // Live validation only for password and confirmPassword
+      let errors = {};
+      if (name === "password") {
+         if (value && !/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/.test(value)) {
+            errors.password =
+               "Must be 8+ chars, include uppercase, lowercase, and number.";
+         }
+         if (formData.confirmPassword && value !== formData.confirmPassword) {
+            errors.confirmPassword = "Passwords do not match.";
+         } else if (
+            formData.confirmPassword &&
+            value === formData.confirmPassword
+         ) {
+            setFormState((prev) => ({
+               ...prev,
+               errors: { ...prev.errors, confirmPassword: undefined },
+            }));
+         }
+         setFormState((prev) => ({
+            ...prev,
+            errors: { ...prev.errors, ...errors },
+         }));
+      }
+
+      if (name === "confirmPassword") {
+         const errors = {};
+         if (value && value !== formData.password) {
+            errors.confirmPassword = "Passwords do not match.";
+         }
+         setFormState((prev) => ({
+            ...prev,
+            errors: { ...prev.errors, ...errors },
+         }));
+      }
    };
 
    const handleRoleChange = (role) => {
-      setFormData({
-         fullName: "",
-         companyName: "",
-         companyEmail: "",
-         personalEmail: "",
-         password: "",
-         confirmPassword: "",
-         role: role, // keep the newly selected role
-         avatar: null,
-      });
+      setFormData(getInitialFormData(role));
 
-      // Reset form state (errors, avatar preview, password visibility, success)
       setFormState({
          loading: false,
          errors: {},
@@ -69,6 +105,34 @@ const Signup = () => {
    const handleAvatarChange = (e) => {
       const file = e.target.files[0];
       if (!file) return;
+
+      if (file.size > 5 * 1024 * 1024) {
+         setFormState((prev) => ({
+            ...prev,
+            errors: {
+               ...prev.errors,
+               avatar: "File size must be less than 5MB",
+            },
+         }));
+         return;
+      }
+
+      if (!["image/jpeg", "image/jpg", "image/png"].includes(file.type)) {
+         setFormState((prev) => ({
+            ...prev,
+            errors: {
+               ...prev.errors,
+               avatar: "Only JPG and PNG files are allowed",
+            },
+         }));
+         return;
+      }
+
+      setFormState((prev) => ({
+         ...prev,
+         errors: { ...prev.errors, avatar: undefined },
+      }));
+
       setFormData((prev) => ({ ...prev, avatar: file }));
 
       const reader = new FileReader();
@@ -77,18 +141,68 @@ const Signup = () => {
       };
       reader.readAsDataURL(file);
    };
+   //Validation functions
+   const validateForm = () => {
+      let errors = {};
+
+      // Candidate validation
+      if (formData.role === userRoles.CANDIDATE) {
+         if (!formData.fullName.trim()) {
+            errors.fullName = "Full name is required.";
+         }
+         if (!formData.personalEmail.trim()) {
+            errors.personalEmail = "Email is required.";
+         } else if (
+            !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.personalEmail)
+         ) {
+            errors.personalEmail = "Please enter a valid email address.";
+         }
+      }
+
+      // Organization validation
+      if (formData.role === userRoles.ORGANIZATION) {
+         if (!formData.companyName.trim()) {
+            errors.companyName = "Company name is required.";
+         }
+         if (!formData.companyEmail.trim()) {
+            errors.companyEmail = "Company email is required.";
+         } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.companyEmail)) {
+            errors.companyEmail = "Please enter a valid email address.";
+         }
+      }
+
+      if (!formData.password) {
+         errors.password = "Password is required.";
+      } else if (
+         !/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/.test(formData.password)
+      ) {
+         errors.password =
+            "Must be 8+ chars, include uppercase, lowercase, and number.";
+      }
+
+      if (!formData.confirmPassword) {
+         errors.confirmPassword = "Please confirm your password.";
+      } else if (formData.confirmPassword !== formData.password) {
+         errors.confirmPassword = "Passwords do not match.";
+      }
+
+      return errors;
+   };
 
    const handleSignup = async (e) => {
       e.preventDefault();
-      if (formData.password !== formData.confirmPassword) {
-         setFormState((prev) => ({
-            ...prev,
-            errors: { confirmPassword: "Passwords do not match" },
-         }));
+      const errors = validateForm();
+      if (Object.keys(errors).length > 0) {
+         setFormState((prev) => ({ ...prev, errors }));
          return;
       }
 
-      console.log({ formData });
+      setFormState((prev) => ({ ...prev, loading: true }));
+
+      setTimeout(() => {
+         console.log("Submitting form data:", formData);
+         setFormState((prev) => ({ ...prev, loading: false, success: true }));
+      }, 2000);
    };
 
    return (
@@ -323,6 +437,12 @@ const Signup = () => {
                            )}
                         </button>
                      </div>
+                     {formState.errors.password && (
+                        <p className="text-error text-sm mt-1 flex items-center">
+                           <AlertCircle className="w-4 h-4 mr-1" />
+                           {formState.errors.password}
+                        </p>
+                     )}
                   </div>
                   {/*Confirm Password*/}
                   <div>
@@ -366,14 +486,14 @@ const Signup = () => {
                               <EyeOff className="w-5 h-5" />
                            )}
                         </button>
-
-                        {formState.errors.confirmPassword && (
-                           <p className="text-error text-sm mt-1 flex items-center">
-                              <AlertCircle className="w-4 h-4 mr-1" />
-                              {formState.errors.confirmPassword}
-                           </p>
-                        )}
                      </div>
+
+                     {formState.errors.confirmPassword && (
+                        <p className="text-error text-sm mt-1 flex items-center">
+                           <AlertCircle className="w-4 h-4 mr-1" />
+                           {formState.errors.confirmPassword}
+                        </p>
+                     )}
                   </div>
                   {/*Upload Profile Picture*/}
                   <div>
@@ -424,14 +544,22 @@ const Signup = () => {
                            {formState.errors.avatar}
                         </p>
                      )}
-
-                     <button
-                        type="submit"
-                        className="w-full text-white font-semibold py-3 mt-6 rounded-md cursor-pointer bg-gradient-to-r from-primary to-secondary hover:bg-gradient-to-l hover:from-secondary hover:to-primary transition-all duration-300"
-                     >
-                        Sign Up
-                     </button>
                   </div>
+
+                  <button
+                     type="submit"
+                     disabled={formState.loading}
+                     className="w-full text-white font-semibold py-3 mt-6 rounded-md cursor-pointer bg-gradient-to-r from-primary to-secondary hover:bg-gradient-to-l hover:from-secondary hover:to-primary transition-all duration-300"
+                  >
+                     {formState.loading ? (
+                        <div className="flex items-center justify-center space-x-2">
+                           <Loader className="w-5 h-5 animate-spin" />
+                           <span>Signing Up...</span>
+                        </div>
+                     ) : (
+                        <span>Sign up</span>
+                     )}
+                  </button>
                </form>
 
                <p className="text-center text-label mt-4">
