@@ -1,22 +1,41 @@
-import express from "express";
 import dotenv from "dotenv";
-import cookieParser from "cookie-parser";
+
+import express from "express";
+import cors from "cors";
+import path from "path";
+import { fileURLToPath } from "url";
+
 import connectDB from "./config/db.js";
-import authRoutes from "./routes/auth.js";
+import authRoutes from "./routes/authRoutes.js";
 
 dotenv.config();
 
 const app = express();
 
-//Connect to MangoDB
+// Fix for __dirname in ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+//Middleware to handle CORS
+app.use(
+   cors({
+      origin: "*",
+      methods: ["GET", "POST", "PUT", "DELETE"],
+      allowedHeaders: ["Content-Type", "Authorization"],
+   })
+);
+
+//Connect to MongoDB
 connectDB();
 
 //Middleware
 app.use(express.json());
-app.use(cookieParser());
 
-//Routes
-app.use("/api/auth", authRoutes);
+// //Routes
+// app.use("/api/auth", authRoutes);
+
+//Server uploads folder
+app.use("/uploads", express.static(path.join(__dirname, "uploads"), {}));
 
 //Start server
 const PORT = process.env.PORT || 5000;
