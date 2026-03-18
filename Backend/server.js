@@ -22,7 +22,7 @@ app.use(
       origin: "*",
       methods: ["GET", "POST", "PUT", "DELETE"],
       allowedHeaders: ["Content-Type", "Authorization"],
-   })
+   }),
 );
 
 //Connect to MongoDB
@@ -31,8 +31,9 @@ connectDB();
 //Middleware
 app.use(express.json());
 
-// //Routes
-// app.use("/api/auth", authRoutes);
+//Routes
+app.use("/api/auth", authRoutes);
+// app.use(/api/user, userRoutes);
 
 //Server uploads folder
 app.use("/uploads", express.static(path.join(__dirname, "uploads"), {}));
