@@ -11,4 +11,4 @@ const savedJobSchema = new mongoose.Schema(
    },
    { timestamps: true },
 );
-export default mongoose.model("SavedJob", savedJobSchema);
+export default mongoose.model("SavedJobs", savedJobSchema);
