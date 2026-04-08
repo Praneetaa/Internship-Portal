@@ -3,13 +3,13 @@
 @theme {
    --color-primary: #2c3e9e;
    --color-secondary: #9b8cff;
-   --color-accent: #ff6f61;
+   --color-accent: #4f8ef7;
    --color-neutral: #f7f7f7;
-   --color-paragraph: #2e2e2e;
+   --color-paragraph: #333333;
    --color-label: #616161;
    --color-icon: #9e9e9e;
    --color-outline: #e0e0e0;
-   --color-success: green;
+   --color-success: #2ecc71;
    --color-error: #f44336;
 }
 input[type="password"]::-ms-reveal {

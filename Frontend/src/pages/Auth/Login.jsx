@@ -4,7 +4,7 @@ import { Mail, Lock, Eye, EyeOff, Loader, AlertCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 import axiosInstance from "../../utils/axiosInstances";
 import { API_PATHS } from "../../utils/apiPaths";
-import { useAuth } from "../../context/Authcontext";
+import { useAuth } from "../../context/AuthContext";
 
 const Login = () => {
    const { login } = useAuth();
@@ -92,7 +92,7 @@ const Login = () => {
          }));
          const { token, role } = response.data;
          if (token) {
-            login(response.data.token);
+            login(response.data, token);
 
             //Redirect based on role
             setTimeout(() => {
@@ -161,7 +161,7 @@ const Login = () => {
                   <div>
                      <label
                         htmlFor="email"
-                        className="block p-2 text-primary font-md"
+                        className="block p-2 text-primary font-medium"
                      >
                         Email Address
                      </label>
@@ -254,7 +254,7 @@ const Login = () => {
                   {formState.errors.submit && (
                      <div className="bg-red-50 border border-red-200 rounded-lg p-3">
                         <p className="text-error text-sm mt-1 flex items-center">
-                           <AlertCircle className="w=4 h-4 mr-2" />
+                           <AlertCircle className="w-4 h-4 mr-2" />
                            {formState.errors.submit}
                         </p>
                      </div>

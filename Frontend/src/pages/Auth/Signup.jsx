@@ -10,6 +10,10 @@ import {
    Loader,
 } from "lucide-react";
 import { motion } from "framer-motion";
+import axiosInstance from "../../utils/axiosInstances";
+import { API_PATHS } from "../../utils/apiPaths";
+import uploadImage from "../../utils/uploadImage";
+import { useAuth } from "../../context/AuthContext";
 
 const userRoles = { CANDIDATE: "candidate", ORGANIZATION: "organization" };
 
@@ -26,8 +30,10 @@ const getInitialFormData = (role) => ({
 });
 
 const Signup = () => {
+   const { login } = useAuth();
+
    const [formData, setFormData] = useState(
-      getInitialFormData(userRoles.CANDIDATE)
+      getInitialFormData(userRoles.CANDIDATE),
    );
 
    const [formState, setFormState] = useState({
@@ -199,12 +205,59 @@ const Signup = () => {
 
       setFormState((prev) => ({ ...prev, loading: true }));
 
-      setTimeout(() => {
-         console.log("Submitting form data:", formData);
-         setFormState((prev) => ({ ...prev, loading: false, success: true }));
-      }, 2000);
-   };
+      try {
+         let avatarUrl = "";
 
+         //Upload image if present
+         if (formData.avatar) {
+            const imgUploadRes = await uploadImage(formData.avatar);
+            avatarUrl = imgUploadRes.imageUrl || "";
+         }
+         const response = await axiosInstance.post(API_PATHS.AUTH.REGISTER, {
+            name: formData.fullName,
+            email:
+               formData.role === userRoles.CANDIDATE
+                  ? formData.personalEmail
+                  : formData.companyEmail,
+            password: formData.password,
+            role: formData.role,
+            avatar: avatarUrl || "",
+         });
+
+         //Handle successful registration
+         setFormState((prev) => ({
+            ...prev,
+            loading: false,
+            success: true,
+            errors: {},
+         }));
+
+         const { token } = response.data;
+         if (token) {
+            login(response.data, token);
+
+            //Redirect based on role
+            setTimeout(() => {
+               window.location.href =
+                  formData.role === "organization"
+                     ? "/organization-dashboard"
+                     : "/find-jobs";
+            }, 2000);
+         }
+      } catch (error) {
+         console.log("error", error);
+
+         setFormState((prev) => ({
+            ...prev,
+            loading: false,
+            errors: {
+               submit:
+                  error.response?.data?.message ||
+                  "Registration failed. Please try again.",
+            },
+         }));
+      }
+   };
    return (
       <div className="min-h-screen flex justify-center items-center bg-neutral py-12 px-4">
          <motion.div
