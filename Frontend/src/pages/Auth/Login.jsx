@@ -141,15 +141,15 @@ const Login = () => {
    // }
 
    return (
-      <div className="flex justify-center items-center h-screen bg-neutral">
+      <div className="flex justify-center items-start sm:items-center min-h-screen bg-neutral px-4 py-10">
          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
             className="w-full flex justify-center"
          >
-            <div className="w-md max-w-md bg-white p-10 rounded-xl shadow-lg">
-               <h2 className="text-3xl font-bold text-center text-primary mb-4">
+            <div className="w-full max-w-md bg-white p-6 sm:p-10 rounded-xl shadow-lg">
+               <h2 className="text-2xl sm:text-3xl font-bold text-center text-primary mb-4">
                   Welcome Back!
                </h2>
                <p className="text-center text-paragraph mb-6">
@@ -242,10 +242,12 @@ const Login = () => {
                         </p>
                      )}
                   </div>
-                  <div className="flex items-center space-x-2">
-                     <input type="checkbox" />
-                     <label className="">Remember me</label>
-                     <label className="ml-auto text-primary">
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
+                     <label className="flex items-center gap-2">
+                        <input type="checkbox" />
+                        <span>Remember me</span>
+                     </label>
+                     <label className="sm:ml-auto text-primary">
                         Forgot password?
                      </label>
                   </div>

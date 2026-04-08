@@ -11,7 +11,27 @@
    --color-outline: #e0e0e0;
    --color-success: #2ecc71;
    --color-error: #f44336;
+   --color-background: #f4f5fb;
+   --color-text: #1f2544;
+   --color-muted: #8a8fa7;
 }
 input[type="password"]::-ms-reveal {
    display: none;
+}
+
+body {
+   background-color: var(--color-background);
+   color: var(--color-text);
+}
+
+.reveal {
+   opacity: 0;
+   transform: translateY(24px) scale(0.98);
+   transition: opacity 0.6s ease, transform 0.6s ease;
+   transition-delay: var(--delay, 0ms);
+}
+
+.reveal.is-visible {
+   opacity: 1;
+   transform: translateY(0) scale(1);
 }

@@ -259,15 +259,15 @@ const Signup = () => {
       }
    };
    return (
-      <div className="min-h-screen flex justify-center items-center bg-neutral py-12 px-4">
+      <div className="min-h-screen flex justify-center items-start sm:items-center bg-neutral py-10 sm:py-12 px-4">
          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
             className="w-full flex justify-center"
          >
-            <div className="w-full max-w-md bg-white p-8 rounded-xl shadow-lg">
-               <h2 className="text-3xl font-bold text-center text-primary mb-2">
+            <div className="w-full max-w-md bg-white p-6 sm:p-8 rounded-xl shadow-lg">
+               <h2 className="text-2xl sm:text-3xl font-bold text-center text-primary mb-2">
                   Create Account
                </h2>
                <p className="text-center text-paragraph mb-5">
@@ -280,11 +280,11 @@ const Signup = () => {
                      <label className="block text-base font-medium text-label mb-3">
                         I am a:
                      </label>
-                     <div className="grid grid-cols-2 gap-4">
+                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         {/* Candidate Button */}
                         <button
                            type="button"
-                           className={`flex flex-col items-center p-4 rounded-lg border border-label transition ${
+                           className={`flex flex-col items-center p-4 sm:p-5 rounded-lg border border-label transition ${
                               formData.role === userRoles.CANDIDATE
                                  ? "border-primary bg-[#F7F7F8]"
                                  : "border-outline"
@@ -300,7 +300,7 @@ const Signup = () => {
                         {/* Organization Button */}
                         <button
                            type="button"
-                           className={`flex flex-col items-center p-4 rounded-lg border transition ${
+                           className={`flex flex-col items-center p-4 sm:p-5 rounded-lg border transition ${
                               formData.role === userRoles.ORGANIZATION
                                  ? "border-primary bg-[#F7F7F8]"
                                  : "border-outline"
@@ -554,7 +554,7 @@ const Signup = () => {
                         Profile Picture (Optional)
                      </label>
 
-                     <div className="flex items-center space-x-4">
+                     <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
                         {/* Circle Preview */}
                         <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden">
                            {formState.avatarPreview ? (
@@ -581,7 +581,7 @@ const Signup = () => {
 
                            <label
                               htmlFor="avatar"
-                              className="cursor-pointer bg-gray-50 border border-outline rounded-lg px-4 py-2 text-sm font-medium text-paragraph hover:bg-gray-100 transition-colors flex items-center space-x-2"
+                              className="cursor-pointer bg-gray-50 border border-outline rounded-lg px-4 py-2 text-sm font-medium text-paragraph hover:bg-gray-100 transition-colors inline-flex items-center gap-2"
                            >
                               <Upload className="w-4 h-4" />
                               <span>Upload Photo</span>
