@@ -2,8 +2,12 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { Mail, Lock, Eye, EyeOff, Loader, AlertCircle } from "lucide-react";
 import { Link } from "react-router-dom";
+import axiosInstance from "../../utils/axiosInstances";
+import { API_PATHS } from "../../utils/apiPaths";
+import { useAuth } from "../../context/Authcontext";
 
 const Login = () => {
+   const { login } = useAuth();
    const [formData, setFormData] = useState({
       email: "",
       password: "",
@@ -75,6 +79,29 @@ const Login = () => {
       }));
       try {
          //Login API Integration
+         const response = await axiosInstance.post(API_PATHS.AUTH.LOGIN, {
+            email: formData.email,
+            password: formData.password,
+            rememberMe: formData.rememberMe,
+         });
+         setFormState((prev) => ({
+            ...prev,
+            loading: false,
+            success: true,
+            errors: {},
+         }));
+         const { token, role } = response.data;
+         if (token) {
+            login(response.data.token);
+
+            //Redirect based on role
+            setTimeout(() => {
+               window.location.href =
+                  role === "organization"
+                     ? "/employer-dashboard"
+                     : "/find-jobs";
+            }, 2000);
+         }
       } catch (error) {
          setFormState((prev) => ({
             ...prev,
