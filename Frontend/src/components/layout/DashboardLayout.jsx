@@ -5,7 +5,7 @@ import { useAuth } from "../../context/AuthContext";
 import { NAVIGATION_MENU } from "../../utils/data";
 import ProfileDropdown from "./ProfileDropdown";
 
-const DashboardLayout = ({ activeMenu, children }) => {
+const DashboardLayout = ({ activeMenu, navItems = NAVIGATION_MENU, children }) => {
    const { user, logout } = useAuth();
    const navigate = useNavigate();
 
@@ -79,7 +79,10 @@ const DashboardLayout = ({ activeMenu, children }) => {
             {/*Company Logo*/}
             <div className="flex items-center justify-between h-16 border-b border-outline bg-white/70 px-6">
                {!sidebarCollapsed ? (
-                  <Link className="flex items-center space-x-3" to="/">
+                  <Link
+                     className="flex items-center space-x-3"
+                     to="/organization-dashboard"
+                  >
                      <div className="h-8 w-8 bg-gradient-to-br from-primary to-secondary rounded-lg flex items-center justify-center">
                         <Briefcase className="h-5 w-5 text-white" />
                      </div>
@@ -105,7 +108,7 @@ const DashboardLayout = ({ activeMenu, children }) => {
             </div>
             {/*Navigation*/}
             <nav className="mt-6 space-y-1 px-3">
-               {NAVIGATION_MENU.map((item) => {
+               {navItems.map((item) => {
                   const Icon = item.icon;
                   const isActive = activeNavItem === item.id;
                   return (
@@ -155,7 +158,7 @@ const DashboardLayout = ({ activeMenu, children }) => {
                </div>
             )}
             {/* Profile dropdown */}
-            <header className="flex items-center justify-end border-b border-outline bg-white px-6 py-4">
+            <header className="relative z-50 flex items-center justify-end border-b border-outline bg-white px-6 py-4">
                <ProfileDropdown
                   user={user}
                   isOpen={profileDropdownOpen}

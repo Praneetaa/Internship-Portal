@@ -214,7 +214,10 @@ const Signup = () => {
             avatarUrl = imgUploadRes.imageUrl || "";
          }
          const response = await axiosInstance.post(API_PATHS.AUTH.REGISTER, {
-            name: formData.fullName,
+            name:
+               formData.role === userRoles.CANDIDATE
+                  ? formData.fullName
+                  : formData.companyName,
             email:
                formData.role === userRoles.CANDIDATE
                   ? formData.personalEmail
@@ -617,7 +620,7 @@ const Signup = () => {
 
                <p className="text-center text-label mt-4">
                   Already have an account?{" "}
-                  <Link to="/" className="text-accent hover:underline">
+                  <Link to="/Login" className="text-accent hover:underline">
                      Log in
                   </Link>
                </p>

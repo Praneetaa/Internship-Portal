@@ -12,6 +12,7 @@ import {
    LayoutDashboard,
    Plus,
    Users,
+   Heart,
 } from "lucide-react";
 
 export const candidateFeatures = [
@@ -68,7 +69,15 @@ export const NAVIGATION_MENU = [
    { id: "organization-dashboard", name: "Dashboard", icon: LayoutDashboard },
    { id: "post-job", name: "Post Job", icon: Plus },
    { id: "manage-jobs", name: "Manage Jobs", icon: Briefcase },
+   { id: "applications", name: "Applications", icon: FileText },
    { id: "company-profile", name: "Company Profile", icon: Building2 },
+];
+
+export const NAVIGATION_MENU_APPLICANT = [
+   { id: "find-jobs", name: "Find Internships", icon: Search },
+   { id: "saved-jobs", name: "Saved Jobs", icon: Heart },
+   { id: "my-applications", name: "My Applications", icon: FileText },
+   { id: "candidate-profile", name: "Profile", icon: User },
 ];
 
 //Categories and job types

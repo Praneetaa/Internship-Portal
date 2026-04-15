@@ -98,7 +98,7 @@ const Login = () => {
             setTimeout(() => {
                window.location.href =
                   role === "organization"
-                     ? "/employer-dashboard"
+                     ? "/organization-dashboard"
                      : "/find-jobs";
             }, 2000);
          }
@@ -114,31 +114,6 @@ const Login = () => {
          }));
       }
    };
-
-   // if (formState.success) {
-   //    return (
-   //       <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-   //          <motion.div
-   //             initial={{ opacity: 0, scale: 0.9 }}
-   //             animate={{ opacity: 1, scale: 1 }}
-   //             className="bg-white p-8 rounded-xl shadow-lg max-w-md w-full text-center"
-   //          >
-   //             <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4 " />
-   //             <h2 className="text-2xl font-bold text-primary mb-2">
-   //                Welcome Back!
-   //             </h2>
-   //             <p className="text-gray-600 mb-4">
-   //                You have been successfully logged in.
-   //             </p>
-   //             <div className="animate-spin w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full mx-auto">
-   //                <p className="text-sm text-gray-500 mt-2">
-   //                   Redirecting to your dashboard...
-   //                </p>
-   //             </div>
-   //          </motion.div>
-   //       </div>
-   //    );
-   // }
 
    return (
       <div className="flex justify-center items-start sm:items-center min-h-screen bg-neutral px-4 py-10">

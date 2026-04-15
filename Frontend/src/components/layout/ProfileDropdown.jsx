@@ -24,7 +24,7 @@ const ProfileDropdown = ({ user, isOpen, onToggle, onLogout }) => {
          <button
             type="button"
             onClick={onToggle}
-            className="flex items-center gap-2 rounded-md bg-transparent px-2.5 py-2 text-sm font-medium text-paragraph transition hover:bg-neutral"
+            className="flex items-center gap-2 rounded-md bg-white px-3 py-2 text-sm font-medium text-paragraph transition hover:bg-neutral"
          >
             <span className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-primary/10 text-primary">
                {user?.avatar ? (
@@ -43,11 +43,13 @@ const ProfileDropdown = ({ user, isOpen, onToggle, onLogout }) => {
                </span>
                <span className="text-xs text-label">{displayRole}</span>
             </span>
-            <ChevronDown className="h-4 w-4 text-icon" />
+            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-neutral">
+               <ChevronDown className="h-4 w-4 text-icon" />
+            </span>
          </button>
 
          {isOpen && (
-            <div className="absolute right-0 mt-2 w-64 rounded-md bg-white p-3">
+            <div className="absolute right-0 z-50 mt-2 w-64 rounded-md border border-outline bg-white p-3">
                <div className="flex items-center gap-3 pb-3">
                   <span className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-primary/10 text-primary">
                      {user?.avatar ? (
