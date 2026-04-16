@@ -1,13 +1,18 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Mail, Lock, Eye, EyeOff, Loader, AlertCircle } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
+import axiosInstance from "../../utils/axiosInstances";
+import { API_PATHS } from "../../utils/apiPaths";
+import { useAuth } from "../../context/AuthContext";
 
 const Login = () => {
+   const { login } = useAuth();
+   const navigate = useNavigate();
    const [formData, setFormData] = useState({
       email: "",
       password: "",
-      rememberMe: false,
    });
 
    const [formState, setFormState] = useState({
@@ -33,7 +38,6 @@ const Login = () => {
    //Handle input changes
    const handleInputChange = (e) => {
       const { name, value } = e.target;
-      console.log({ name, value });
       setFormData((prev) => ({
          ...prev,
          [name]: value,
@@ -75,54 +79,50 @@ const Login = () => {
       }));
       try {
          //Login API Integration
-      } catch (error) {
+         const response = await axiosInstance.post(API_PATHS.AUTH.LOGIN, {
+            email: formData.email,
+            password: formData.password,
+         });
          setFormState((prev) => ({
             ...prev,
             loading: false,
-            errors: {
-               submit:
-                  error.response?.data.message ||
-                  "Login failed. Please check your credentials",
-            },
+            success: true,
+            errors: {},
          }));
+         const { token, role } = response.data;
+         if (token) {
+            login(response.data, token);
+            toast.success("Welcome back!");
+            navigate(
+               role === "organization"
+                  ? "/organization-dashboard"
+                  : "/find-jobs",
+               { replace: true },
+            );
+         }
+      } catch (error) {
+         const message =
+            error.response?.data?.message ||
+            "Login failed. Please check your credentials";
+         setFormState((prev) => ({
+            ...prev,
+            loading: false,
+            errors: { submit: message },
+         }));
+         toast.error(message);
       }
    };
 
-   // if (formState.success) {
-   //    return (
-   //       <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-   //          <motion.div
-   //             initial={{ opacity: 0, scale: 0.9 }}
-   //             animate={{ opacity: 1, scale: 1 }}
-   //             className="bg-white p-8 rounded-xl shadow-lg max-w-md w-full text-center"
-   //          >
-   //             <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4 " />
-   //             <h2 className="text-2xl font-bold text-primary mb-2">
-   //                Welcome Back!
-   //             </h2>
-   //             <p className="text-gray-600 mb-4">
-   //                You have been successfully logged in.
-   //             </p>
-   //             <div className="animate-spin w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full mx-auto">
-   //                <p className="text-sm text-gray-500 mt-2">
-   //                   Redirecting to your dashboard...
-   //                </p>
-   //             </div>
-   //          </motion.div>
-   //       </div>
-   //    );
-   // }
-
    return (
-      <div className="flex justify-center items-center h-screen bg-neutral">
+      <div className="flex justify-center items-start sm:items-center min-h-screen bg-neutral px-4 py-10">
          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
             className="w-full flex justify-center"
          >
-            <div className="w-md max-w-md bg-white p-10 rounded-xl shadow-lg">
-               <h2 className="text-3xl font-bold text-center text-primary mb-4">
+            <div className="w-full max-w-md bg-white p-6 sm:p-10 rounded-xl shadow-lg">
+               <h2 className="text-2xl sm:text-3xl font-bold text-center text-primary mb-4">
                   Welcome Back!
                </h2>
                <p className="text-center text-paragraph mb-6">
@@ -134,7 +134,7 @@ const Login = () => {
                   <div>
                      <label
                         htmlFor="email"
-                        className="block p-2 text-primary font-md"
+                        className="block p-2 text-primary font-medium"
                      >
                         Email Address
                      </label>
@@ -215,10 +215,12 @@ const Login = () => {
                         </p>
                      )}
                   </div>
-                  <div className="flex items-center space-x-2">
-                     <input type="checkbox" />
-                     <label className="">Remember me</label>
-                     <label className="ml-auto text-primary">
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
+                     <label className="flex items-center gap-2">
+                        <input type="checkbox" />
+                        <span>Remember me</span>
+                     </label>
+                     <label className="sm:ml-auto text-primary">
                         Forgot password?
                      </label>
                   </div>
@@ -227,7 +229,7 @@ const Login = () => {
                   {formState.errors.submit && (
                      <div className="bg-red-50 border border-red-200 rounded-lg p-3">
                         <p className="text-error text-sm mt-1 flex items-center">
-                           <AlertCircle className="w=4 h-4 mr-2" />
+                           <AlertCircle className="w-4 h-4 mr-2" />
                            {formState.errors.submit}
                         </p>
                      </div>

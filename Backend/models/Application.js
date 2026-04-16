@@ -18,4 +18,4 @@ const applicationSchema = new mongoose.Schema(
    { timestamps: true }
 );
 
-export default mongoose.Schema("Application", applicationSchema);
+export default mongoose.model("Application", applicationSchema);

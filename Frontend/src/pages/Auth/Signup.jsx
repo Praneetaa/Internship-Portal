@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
    Eye,
    EyeOff,
@@ -10,6 +10,11 @@ import {
    Loader,
 } from "lucide-react";
 import { motion } from "framer-motion";
+import toast from "react-hot-toast";
+import axiosInstance from "../../utils/axiosInstances";
+import { API_PATHS } from "../../utils/apiPaths";
+import uploadImage from "../../utils/uploadImage";
+import { useAuth } from "../../context/AuthContext";
 
 const userRoles = { CANDIDATE: "candidate", ORGANIZATION: "organization" };
 
@@ -26,8 +31,11 @@ const getInitialFormData = (role) => ({
 });
 
 const Signup = () => {
+   const { login } = useAuth();
+   const navigate = useNavigate();
+
    const [formData, setFormData] = useState(
-      getInitialFormData(userRoles.CANDIDATE)
+      getInitialFormData(userRoles.CANDIDATE),
    );
 
    const [formState, setFormState] = useState({
@@ -41,7 +49,6 @@ const Signup = () => {
 
    const handleInputChange = (e) => {
       const { name, value } = e.target;
-      console.log({ name, value });
       setFormData((prev) => ({
          ...prev,
          [name]: value,
@@ -199,22 +206,83 @@ const Signup = () => {
 
       setFormState((prev) => ({ ...prev, loading: true }));
 
-      setTimeout(() => {
-         console.log("Submitting form data:", formData);
-         setFormState((prev) => ({ ...prev, loading: false, success: true }));
-      }, 2000);
-   };
+      const isOrganization = formData.role === userRoles.ORGANIZATION;
+      const emailField = isOrganization ? "companyEmail" : "personalEmail";
 
+      try {
+         let avatarUrl = "";
+
+         //Upload image if present
+         if (formData.avatar) {
+            const imgUploadRes = await uploadImage(formData.avatar);
+            avatarUrl = imgUploadRes.imageUrl || "";
+         }
+
+         const payload = {
+            name: isOrganization ? formData.companyName : formData.fullName,
+            email: isOrganization
+               ? formData.companyEmail
+               : formData.personalEmail,
+            password: formData.password,
+            role: formData.role,
+            avatar: avatarUrl || "",
+         };
+         if (isOrganization) {
+            payload.companyName = formData.companyName;
+         }
+
+         const response = await axiosInstance.post(
+            API_PATHS.AUTH.REGISTER,
+            payload,
+         );
+
+         //Handle successful registration
+         setFormState((prev) => ({
+            ...prev,
+            loading: false,
+            success: true,
+            errors: {},
+         }));
+
+         const { token } = response.data;
+         if (token) {
+            login(response.data, token);
+            toast.success("Account created — welcome!");
+            navigate(
+               isOrganization ? "/organization-dashboard" : "/find-jobs",
+               { replace: true },
+            );
+         }
+      } catch (error) {
+         const message =
+            error.response?.data?.message ||
+            "Registration failed. Please try again.";
+
+         //Map "User already exists" → inline error on the email field
+         const isEmailTaken = /already exists/i.test(message);
+
+         setFormState((prev) => ({
+            ...prev,
+            loading: false,
+            errors: isEmailTaken
+               ? { [emailField]: "This email is already registered." }
+               : { submit: message },
+         }));
+         toast.error(
+            isEmailTaken ? "This email is already registered." : message,
+         );
+      }
+   };
    return (
-      <div className="min-h-screen flex justify-center items-center bg-neutral py-12 px-4">
+      <div className="min-h-screen flex justify-center items-start sm:items-center bg-neutral py-10 sm:py-12 px-4">
          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
             className="w-full flex justify-center"
          >
-            <div className="w-full max-w-md bg-white p-8 rounded-xl shadow-lg">
-               <h2 className="text-3xl font-bold text-center text-primary mb-2">
+            <div className="w-full max-w-md bg-white p-6 sm:p-8 rounded-xl shadow-lg">
+               <h2 className="text-2xl sm:text-3xl font-bold text-center text-primary mb-2">
                   Create Account
                </h2>
                <p className="text-center text-paragraph mb-5">
@@ -227,11 +295,11 @@ const Signup = () => {
                      <label className="block text-base font-medium text-label mb-3">
                         I am a:
                      </label>
-                     <div className="grid grid-cols-2 gap-4">
+                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         {/* Candidate Button */}
                         <button
                            type="button"
-                           className={`flex flex-col items-center p-4 rounded-lg border border-label transition ${
+                           className={`flex flex-col items-center p-4 sm:p-5 rounded-lg border border-label transition ${
                               formData.role === userRoles.CANDIDATE
                                  ? "border-primary bg-[#F7F7F8]"
                                  : "border-outline"
@@ -247,7 +315,7 @@ const Signup = () => {
                         {/* Organization Button */}
                         <button
                            type="button"
-                           className={`flex flex-col items-center p-4 rounded-lg border transition ${
+                           className={`flex flex-col items-center p-4 sm:p-5 rounded-lg border transition ${
                               formData.role === userRoles.ORGANIZATION
                                  ? "border-primary bg-[#F7F7F8]"
                                  : "border-outline"
@@ -501,7 +569,7 @@ const Signup = () => {
                         Profile Picture (Optional)
                      </label>
 
-                     <div className="flex items-center space-x-4">
+                     <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
                         {/* Circle Preview */}
                         <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden">
                            {formState.avatarPreview ? (
@@ -528,7 +596,7 @@ const Signup = () => {
 
                            <label
                               htmlFor="avatar"
-                              className="cursor-pointer bg-gray-50 border border-outline rounded-lg px-4 py-2 text-sm font-medium text-paragraph hover:bg-gray-100 transition-colors flex items-center space-x-2"
+                              className="cursor-pointer bg-gray-50 border border-outline rounded-lg px-4 py-2 text-sm font-medium text-paragraph hover:bg-gray-100 transition-colors inline-flex items-center gap-2"
                            >
                               <Upload className="w-4 h-4" />
                               <span>Upload Photo</span>
@@ -564,7 +632,7 @@ const Signup = () => {
 
                <p className="text-center text-label mt-4">
                   Already have an account?{" "}
-                  <Link to="/" className="text-accent hover:underline">
+                  <Link to="/Login" className="text-accent hover:underline">
                      Log in
                   </Link>
                </p>

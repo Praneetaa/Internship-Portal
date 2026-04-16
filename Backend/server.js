@@ -7,6 +7,11 @@ import { fileURLToPath } from "url";
 
 import connectDB from "./config/db.js";
 import authRoutes from "./routes/authRoutes.js";
+import userRoutes from "./routes/userRoutes.js";
+import jobRoutes from "./routes/jobRoutes.js";
+import applicationRoutes from "./routes/applicationRoutes.js";
+import savedJobRoutes from "./routes/savedJobRoutes.js";
+import analyticsRoutes from "./routes/analyticsRoutes.js";
 
 dotenv.config();
 
@@ -33,7 +38,11 @@ app.use(express.json());
 
 //Routes
 app.use("/api/auth", authRoutes);
-// app.use(/api/user, userRoutes);
+app.use("/api/user", userRoutes);
+app.use("/api/jobs", jobRoutes);
+app.use("/api/applications", applicationRoutes);
+app.use("/api/saved-jobs", savedJobRoutes);
+app.use("/api/analytics", analyticsRoutes);
 
 //Server uploads folder
 app.use("/uploads", express.static(path.join(__dirname, "uploads"), {}));
