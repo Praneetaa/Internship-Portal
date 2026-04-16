@@ -1,17 +1,18 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Mail, Lock, Eye, EyeOff, Loader, AlertCircle } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 import axiosInstance from "../../utils/axiosInstances";
 import { API_PATHS } from "../../utils/apiPaths";
 import { useAuth } from "../../context/AuthContext";
 
 const Login = () => {
    const { login } = useAuth();
+   const navigate = useNavigate();
    const [formData, setFormData] = useState({
       email: "",
       password: "",
-      rememberMe: false,
    });
 
    const [formState, setFormState] = useState({
@@ -37,7 +38,6 @@ const Login = () => {
    //Handle input changes
    const handleInputChange = (e) => {
       const { name, value } = e.target;
-      console.log({ name, value });
       setFormData((prev) => ({
          ...prev,
          [name]: value,
@@ -82,7 +82,6 @@ const Login = () => {
          const response = await axiosInstance.post(API_PATHS.AUTH.LOGIN, {
             email: formData.email,
             password: formData.password,
-            rememberMe: formData.rememberMe,
          });
          setFormState((prev) => ({
             ...prev,
@@ -93,25 +92,24 @@ const Login = () => {
          const { token, role } = response.data;
          if (token) {
             login(response.data, token);
-
-            //Redirect based on role
-            setTimeout(() => {
-               window.location.href =
-                  role === "organization"
-                     ? "/organization-dashboard"
-                     : "/find-jobs";
-            }, 2000);
+            toast.success("Welcome back!");
+            navigate(
+               role === "organization"
+                  ? "/organization-dashboard"
+                  : "/find-jobs",
+               { replace: true },
+            );
          }
       } catch (error) {
+         const message =
+            error.response?.data?.message ||
+            "Login failed. Please check your credentials";
          setFormState((prev) => ({
             ...prev,
             loading: false,
-            errors: {
-               submit:
-                  error.response?.data.message ||
-                  "Login failed. Please check your credentials",
-            },
+            errors: { submit: message },
          }));
+         toast.error(message);
       }
    };
 

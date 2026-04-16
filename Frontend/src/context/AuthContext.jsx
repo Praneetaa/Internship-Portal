@@ -1,4 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
+import axiosInstance from "../utils/axiosInstances";
+import { API_PATHS } from "../utils/apiPaths";
 
 const AuthContext = createContext();
 
@@ -23,14 +25,26 @@ export const AuthProvider = ({ children }) => {
          const token = localStorage.getItem("token");
          const userStr = localStorage.getItem("user");
 
-         if (token && userStr) {
-            const userData = JSON.parse(userStr);
-            setUser(userData);
-            setIsAuthenticated(true);
+         if (!token || !userStr) {
+            setLoading(false);
+            return;
          }
+
+         //Optimistic hydrate from localStorage
+         setUser(JSON.parse(userStr));
+         setIsAuthenticated(true);
+
+         //Verify token is still valid with the server
+         const response = await axiosInstance.get(API_PATHS.AUTH.GET_PROFILE);
+         const fresh = response.data;
+         localStorage.setItem("user", JSON.stringify(fresh));
+         setUser(fresh);
       } catch (error) {
          console.error("Auth check failed", error);
-         logout();
+         localStorage.removeItem("token");
+         localStorage.removeItem("user");
+         setUser(null);
+         setIsAuthenticated(false);
       } finally {
          setLoading(false);
       }

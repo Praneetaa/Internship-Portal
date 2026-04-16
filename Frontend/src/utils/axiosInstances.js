@@ -25,6 +25,12 @@ axiosInstance.interceptors.request.use(
 );
 
 //Response Interceptor
+const AUTH_BYPASS_PATHS = [
+   "/api/auth/login",
+   "/api/auth/register",
+   "/api/auth/me",
+];
+
 axiosInstance.interceptors.response.use(
    (response) => {
       return response;
@@ -32,9 +38,18 @@ axiosInstance.interceptors.response.use(
    (error) => {
       //Handle common errors globally
       if (error.response) {
-         if (error.response.status === 401) {
-            //Redirect to login page
-            window.location.href = "/";
+         const requestUrl = error.config?.url || "";
+         const isAuthRequest = AUTH_BYPASS_PATHS.some((p) =>
+            requestUrl.includes(p),
+         );
+
+         if (error.response.status === 401 && !isAuthRequest) {
+            //Drop stale credentials and redirect to login
+            localStorage.removeItem("token");
+            localStorage.removeItem("user");
+            if (window.location.pathname !== "/Login") {
+               window.location.href = "/Login";
+            }
          } else if (error.response.status === 500) {
             console.error("Server error. Please try again later");
          }

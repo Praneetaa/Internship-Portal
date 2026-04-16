@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
    Eye,
    EyeOff,
@@ -10,6 +10,7 @@ import {
    Loader,
 } from "lucide-react";
 import { motion } from "framer-motion";
+import toast from "react-hot-toast";
 import axiosInstance from "../../utils/axiosInstances";
 import { API_PATHS } from "../../utils/apiPaths";
 import uploadImage from "../../utils/uploadImage";
@@ -31,6 +32,7 @@ const getInitialFormData = (role) => ({
 
 const Signup = () => {
    const { login } = useAuth();
+   const navigate = useNavigate();
 
    const [formData, setFormData] = useState(
       getInitialFormData(userRoles.CANDIDATE),
@@ -47,7 +49,6 @@ const Signup = () => {
 
    const handleInputChange = (e) => {
       const { name, value } = e.target;
-      console.log({ name, value });
       setFormData((prev) => ({
          ...prev,
          [name]: value,
@@ -205,6 +206,9 @@ const Signup = () => {
 
       setFormState((prev) => ({ ...prev, loading: true }));
 
+      const isOrganization = formData.role === userRoles.ORGANIZATION;
+      const emailField = isOrganization ? "companyEmail" : "personalEmail";
+
       try {
          let avatarUrl = "";
 
@@ -213,19 +217,24 @@ const Signup = () => {
             const imgUploadRes = await uploadImage(formData.avatar);
             avatarUrl = imgUploadRes.imageUrl || "";
          }
-         const response = await axiosInstance.post(API_PATHS.AUTH.REGISTER, {
-            name:
-               formData.role === userRoles.CANDIDATE
-                  ? formData.fullName
-                  : formData.companyName,
-            email:
-               formData.role === userRoles.CANDIDATE
-                  ? formData.personalEmail
-                  : formData.companyEmail,
+
+         const payload = {
+            name: isOrganization ? formData.companyName : formData.fullName,
+            email: isOrganization
+               ? formData.companyEmail
+               : formData.personalEmail,
             password: formData.password,
             role: formData.role,
             avatar: avatarUrl || "",
-         });
+         };
+         if (isOrganization) {
+            payload.companyName = formData.companyName;
+         }
+
+         const response = await axiosInstance.post(
+            API_PATHS.AUTH.REGISTER,
+            payload,
+         );
 
          //Handle successful registration
          setFormState((prev) => ({
@@ -238,27 +247,30 @@ const Signup = () => {
          const { token } = response.data;
          if (token) {
             login(response.data, token);
-
-            //Redirect based on role
-            setTimeout(() => {
-               window.location.href =
-                  formData.role === "organization"
-                     ? "/organization-dashboard"
-                     : "/find-jobs";
-            }, 2000);
+            toast.success("Account created — welcome!");
+            navigate(
+               isOrganization ? "/organization-dashboard" : "/find-jobs",
+               { replace: true },
+            );
          }
       } catch (error) {
-         console.log("error", error);
+         const message =
+            error.response?.data?.message ||
+            "Registration failed. Please try again.";
+
+         //Map "User already exists" → inline error on the email field
+         const isEmailTaken = /already exists/i.test(message);
 
          setFormState((prev) => ({
             ...prev,
             loading: false,
-            errors: {
-               submit:
-                  error.response?.data?.message ||
-                  "Registration failed. Please try again.",
-            },
+            errors: isEmailTaken
+               ? { [emailField]: "This email is already registered." }
+               : { submit: message },
          }));
+         toast.error(
+            isEmailTaken ? "This email is already registered." : message,
+         );
       }
    };
    return (

@@ -15,7 +15,10 @@ import SavedJobs from "./pages/Applicants/SavedJobs";
 import JobDetails from "./pages/Applicants/JobDetails";
 import MyApplications from "./pages/Applicants/MyApplications";
 import CandidateProfile from "./pages/Applicants/CandidateProfile";
-// import ProtectedRoute from "./routes/ProtectedRoutes";
+import ProtectedRoute from "./routes/ProtectedRoutes";
+
+const ORG_ONLY = ["organization"];
+const CANDIDATE_ONLY = ["candidate"];
 
 const App = () => {
    return (
@@ -26,32 +29,115 @@ const App = () => {
                <Route path="/" element={<LandingPage />} />
                <Route path="/Login" element={<Login />} />
                <Route path="/Signup" element={<Signup />} />
+               <Route path="/jobs/:id" element={<JobDetails />} />
+
+               {/* Organization Routes */}
                <Route
                   path="/organization-dashboard"
-                  element={<EmployerDashboard />}
+                  element={
+                     <ProtectedRoute allowedRoles={ORG_ONLY}>
+                        <EmployerDashboard />
+                     </ProtectedRoute>
+                  }
                />
-               <Route path="/post-job" element={<JobPostingForm />} />
-               <Route path="/manage-jobs" element={<ManageJobs />} />
-               <Route path="/applications" element={<ApplicationViewer />} />
-               <Route path="/company-profile" element={<EmployerProfilePage />} />
-               <Route path="/edit-profile" element={<EditProfileDetails />} />
+               <Route
+                  path="/post-job"
+                  element={
+                     <ProtectedRoute allowedRoles={ORG_ONLY}>
+                        <JobPostingForm />
+                     </ProtectedRoute>
+                  }
+               />
+               <Route
+                  path="/manage-jobs"
+                  element={
+                     <ProtectedRoute allowedRoles={ORG_ONLY}>
+                        <ManageJobs />
+                     </ProtectedRoute>
+                  }
+               />
+               <Route
+                  path="/applications"
+                  element={
+                     <ProtectedRoute allowedRoles={ORG_ONLY}>
+                        <ApplicationViewer />
+                     </ProtectedRoute>
+                  }
+               />
+               <Route
+                  path="/company-profile"
+                  element={
+                     <ProtectedRoute allowedRoles={ORG_ONLY}>
+                        <EmployerProfilePage />
+                     </ProtectedRoute>
+                  }
+               />
+               <Route
+                  path="/edit-profile"
+                  element={
+                     <ProtectedRoute allowedRoles={ORG_ONLY}>
+                        <EditProfileDetails />
+                     </ProtectedRoute>
+                  }
+               />
                <Route
                   path="/applicants/profile/:id"
-                  element={<ApplicantProfile />}
+                  element={
+                     <ProtectedRoute allowedRoles={ORG_ONLY}>
+                        <ApplicantProfile />
+                     </ProtectedRoute>
+                  }
                />
                <Route
                   path="/applicants/resume/:id"
-                  element={<ResumePreview />}
+                  element={
+                     <ProtectedRoute allowedRoles={ORG_ONLY}>
+                        <ResumePreview />
+                     </ProtectedRoute>
+                  }
                />
-               <Route path="/find-jobs" element={<ApplicantsDashboard />} />
+
+               {/* Candidate Routes */}
+               <Route
+                  path="/find-jobs"
+                  element={
+                     <ProtectedRoute allowedRoles={CANDIDATE_ONLY}>
+                        <ApplicantsDashboard />
+                     </ProtectedRoute>
+                  }
+               />
                <Route
                   path="/applicant-dashboard"
-                  element={<ApplicantsDashboard />}
+                  element={
+                     <ProtectedRoute allowedRoles={CANDIDATE_ONLY}>
+                        <ApplicantsDashboard />
+                     </ProtectedRoute>
+                  }
                />
-               <Route path="/saved-jobs" element={<SavedJobs />} />
-               <Route path="/jobs/:id" element={<JobDetails />} />
-               <Route path="/my-applications" element={<MyApplications />} />
-               <Route path="/candidate-profile" element={<CandidateProfile />} />
+               <Route
+                  path="/saved-jobs"
+                  element={
+                     <ProtectedRoute allowedRoles={CANDIDATE_ONLY}>
+                        <SavedJobs />
+                     </ProtectedRoute>
+                  }
+               />
+               <Route
+                  path="/my-applications"
+                  element={
+                     <ProtectedRoute allowedRoles={CANDIDATE_ONLY}>
+                        <MyApplications />
+                     </ProtectedRoute>
+                  }
+               />
+               <Route
+                  path="/candidate-profile"
+                  element={
+                     <ProtectedRoute allowedRoles={CANDIDATE_ONLY}>
+                        <CandidateProfile />
+                     </ProtectedRoute>
+                  }
+               />
             </Routes>
          </Router>
       </div>
