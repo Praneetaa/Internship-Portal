@@ -12,6 +12,7 @@ import jobRoutes from "./routes/jobRoutes.js";
 import applicationRoutes from "./routes/applicationRoutes.js";
 import savedJobRoutes from "./routes/savedJobRoutes.js";
 import analyticsRoutes from "./routes/analyticsRoutes.js";
+import eventRoutes from "./routes/eventRoutes.js";
 
 dotenv.config();
 
@@ -43,6 +44,7 @@ app.use("/api/jobs", jobRoutes);
 app.use("/api/applications", applicationRoutes);
 app.use("/api/saved-jobs", savedJobRoutes);
 app.use("/api/analytics", analyticsRoutes);
+app.use("/api/events", eventRoutes);
 
 //Server uploads folder
 app.use("/uploads", express.static(path.join(__dirname, "uploads"), {}));

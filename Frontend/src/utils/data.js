@@ -100,3 +100,17 @@ export const WORK_MODE = [
    { value: "Hybrid", label: "Hybrid" },
    { value: "On-site", label: "On-site" },
 ];
+export const EVENT_TYPES = [
+   { value: "Workshop", label: "Workshop" },
+   { value: "Webinar", label: "Webinar" },
+   { value: "Seminar", label: "Seminar" },
+   { value: "Networking", label: "Networking" },
+   { value: "Career Fair", label: "Career Fair" },
+   { value: "Other", label: "Other" },
+];
+
+export const EVENT_MODES = [
+   { value: "Online", label: "Online" },
+   { value: "In-Person", label: "In-Person" },
+   { value: "Hybrid", label: "Hybrid" },
+];

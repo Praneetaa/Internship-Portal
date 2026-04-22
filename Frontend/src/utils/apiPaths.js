@@ -36,4 +36,17 @@ export const API_PATHS = {
    IMAGE: {
       UPLOAD_IMAGE: "/api/auth/upload-image", //Upload profile picture
    },
+   EVENTS: {
+      GET_ALL_EVENTS: "/api/events",
+      POST_EVENT: "/api/events",
+      GET_MY_EVENTS_ORG: "/api/events/org/my-events",
+      GET_MY_REGISTRATIONS: "/api/events/candidate/my-registrations",
+      GET_EVENT_BY_ID: (id) => `/api/events/${id}`,
+      UPDATE_EVENT: (id) => `/api/events/${id}`,
+      DELETE_EVENT: (id) => `/api/events/${id}`,
+      TOGGLE_CLOSE: (id) => `/api/events/${id}/toggle-close`,
+      REGISTER: (id) => `/api/events/${id}/register`,
+      UNREGISTER: (id) => `/api/events/${id}/register`,
+      GET_REGISTRANTS: (id) => `/api/events/${id}/registrants`,
+   },
 };

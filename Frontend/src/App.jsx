@@ -15,6 +15,8 @@ import SavedJobs from "./pages/Applicants/SavedJobs";
 import JobDetails from "./pages/Applicants/JobDetails";
 import MyApplications from "./pages/Applicants/MyApplications";
 import CandidateProfile from "./pages/Applicants/CandidateProfile";
+import EventPostingForm from "./pages/Employer/EventPostingForm";
+import ManageEvents from "./pages/Employer/ManageEvents";
 import ProtectedRoute from "./routes/ProtectedRoutes";
 
 const ORG_ONLY = ["organization"];
@@ -81,6 +83,22 @@ const App = () => {
                   }
                />
                <Route
+                  path="/post-event"
+                  element={
+                     <ProtectedRoute allowedRoles={ORG_ONLY}>
+                        <EventPostingForm />
+                     </ProtectedRoute>
+                  }
+               />
+               <Route
+                  path="/manage-events"
+                  element={
+                     <ProtectedRoute allowedRoles={ORG_ONLY}>
+                        <ManageEvents />
+                     </ProtectedRoute>
+                  }
+               />
+               <Route
                   path="/applicants/profile/:id"
                   element={
                      <ProtectedRoute allowedRoles={ORG_ONLY}>
@@ -127,6 +145,14 @@ const App = () => {
                   element={
                      <ProtectedRoute allowedRoles={CANDIDATE_ONLY}>
                         <MyApplications />
+                     </ProtectedRoute>
+                  }
+               />
+               <Route
+                  path="/events"
+                  element={
+                     <ProtectedRoute allowedRoles={CANDIDATE_ONLY}>
+                        <ApplicantsDashboard />
                      </ProtectedRoute>
                   }
                />
