@@ -225,16 +225,6 @@ const Login = () => {
                      </label>
                   </div>
 
-                  {/*Submit Error*/}
-                  {formState.errors.submit && (
-                     <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                        <p className="text-error text-sm mt-1 flex items-center">
-                           <AlertCircle className="w-4 h-4 mr-2" />
-                           {formState.errors.submit}
-                        </p>
-                     </div>
-                  )}
-
                   {/*Submit Button*/}
                   <button
                      type="submit"
