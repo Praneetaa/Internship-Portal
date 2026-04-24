@@ -5,7 +5,11 @@ import { useAuth } from "../../context/AuthContext";
 import { NAVIGATION_MENU } from "../../utils/data";
 import ProfileDropdown from "./ProfileDropdown";
 
-const DashboardLayout = ({ activeMenu, navItems = NAVIGATION_MENU, children }) => {
+const DashboardLayout = ({
+   activeMenu,
+   navItems = NAVIGATION_MENU,
+   children,
+}) => {
    const { user, logout } = useAuth();
    const navigate = useNavigate();
 

@@ -1,123 +1,133 @@
 import { Link } from "react-router-dom";
+import {
+   Building2,
+   Mail,
+   Globe,
+   Users,
+   MapPin,
+   Briefcase,
+   Pencil,
+} from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import DashboardLayout from "../../components/layout/DashboardLayout";
-import SectionCard from "../../components/cards/SectionCard";
 
 const EmployerProfilePage = () => {
    const { user } = useAuth();
+   const companyName = user?.companyName || user?.name || "Your Company";
+   const email = user?.email || "—";
+   const logo = user?.companyLogo || user?.avatar || null;
+   const about =
+      user?.companyDescription ||
+      user?.about ||
+      "Add a company description to help candidates learn about your organization.";
 
-   const profile = {
-      companyName: user?.companyName || user?.name || "Beaconn Studio",
-      email: user?.companyEmail || user?.email || "hello@beaconn.io",
-      website: user?.website || "www.beaconn.io",
-      size: user?.companySize || "51-200",
-      industry: user?.industry || "Career Development",
-      location: user?.location || "Bangkok, Thailand",
-      logo: user?.logo || user?.avatar || null,
-      about:
-         user?.about ||
-         "We build internship-first experiences to guide emerging talent into confident careers.",
-   };
+   const infoItems = [
+      { icon: Mail, label: "Email", value: email },
+      { icon: Globe, label: "Website", value: user?.website || "Not added" },
+      {
+         icon: Users,
+         label: "Company size",
+         value: user?.companySize || "Not added",
+      },
+      {
+         icon: Briefcase,
+         label: "Industry",
+         value: user?.industry || "Not added",
+      },
+      { icon: MapPin, label: "Location", value: user?.location || "Not added" },
+   ];
 
    return (
       <DashboardLayout activeMenu="company-profile">
          <div className="space-y-6">
             <div className="flex flex-wrap items-start justify-between gap-4">
                <div>
-                  <h1 className="text-2xl font-semibold text-primary">
+                  <h1 className="text-2xl font-bold text-primary">
                      Company profile
                   </h1>
                   <p className="mt-1 text-sm text-label">
-                     Keep your organization profile up to date.
+                     Your public profile visible to candidates.
                   </p>
                </div>
                <Link
                   to="/edit-profile"
-                  className="rounded-full bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-secondary"
+                  className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-secondary transition"
                >
-                  Edit profile
+                  <Pencil className="h-4 w-4" /> Edit profile
                </Link>
             </div>
 
-            <SectionCard title="Overview" subtitle="Public profile details">
-               <div className="grid gap-4 sm:grid-cols-2">
-                  <div>
-                     <p className="text-xs uppercase tracking-[0.2em] text-label">
-                        Company logo
-                     </p>
-                     <div className="mt-2 flex items-center gap-3">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-neutral">
-                           {profile.logo ? (
-                              <img
-                                 src={profile.logo}
-                                 alt={profile.companyName}
-                                 className="h-12 w-12 rounded-xl object-cover"
-                              />
-                           ) : (
-                              <span className="text-xs text-label">Logo</span>
-                           )}
-                        </div>
-                        <p className="text-sm text-label">
-                           Upload your logo in edit profile.
-                        </p>
+            {/* Profile hero */}
+            <div className="overflow-hidden rounded-2xl border border-outline bg-white/90 shadow-sm">
+               <div className="h-28 bg-gradient-to-r from-primary to-secondary" />
+               <div className="px-6 pb-6">
+                  <div className="-mt-10 flex items-end justify-between gap-4">
+                     <div className="h-20 w-20 overflow-hidden rounded-2xl border-4 border-white bg-white shadow-sm flex items-center justify-center">
+                        {logo ? (
+                           <img
+                              src={logo}
+                              alt={companyName}
+                              className="h-full w-full object-cover"
+                           />
+                        ) : (
+                           <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary/15 to-secondary/15 text-2xl font-bold text-primary">
+                              {companyName[0].toUpperCase()}
+                           </div>
+                        )}
                      </div>
+                     <Link
+                        to="/edit-profile"
+                        className="mb-1 inline-flex items-center gap-1.5 rounded-xl border border-outline bg-white px-3 py-1.5 text-xs font-semibold text-primary hover:bg-neutral transition"
+                     >
+                        <Pencil className="h-3 w-3" /> Edit
+                     </Link>
                   </div>
-                  <div>
-                     <p className="text-xs uppercase tracking-[0.2em] text-label">
-                        Company name
-                     </p>
-                     <p className="mt-1 text-sm font-semibold text-primary">
-                        {profile.companyName}
-                     </p>
-                  </div>
-                  <div>
-                     <p className="text-xs uppercase tracking-[0.2em] text-label">
-                        Email
-                     </p>
-                     <p className="mt-1 text-sm text-paragraph">
-                        {profile.email}
-                     </p>
-                  </div>
-                  <div>
-                     <p className="text-xs uppercase tracking-[0.2em] text-label">
-                        Website
-                     </p>
-                     <p className="mt-1 text-sm text-paragraph">
-                        {profile.website}
-                     </p>
-                  </div>
-                  <div>
-                     <p className="text-xs uppercase tracking-[0.2em] text-label">
-                        Company size
-                     </p>
-                     <p className="mt-1 text-sm text-paragraph">
-                        {profile.size}
-                     </p>
-                  </div>
-                  <div>
-                     <p className="text-xs uppercase tracking-[0.2em] text-label">
-                        Industry
-                     </p>
-                     <p className="mt-1 text-sm text-paragraph">
-                        {profile.industry}
-                     </p>
-                  </div>
-                  <div>
-                     <p className="text-xs uppercase tracking-[0.2em] text-label">
-                        Location
-                     </p>
-                     <p className="mt-1 text-sm text-paragraph">
-                        {profile.location}
+                  <div className="mt-3">
+                     <h2 className="text-xl font-bold text-primary">
+                        {companyName}
+                     </h2>
+                     <p className="text-sm text-label mt-0.5">
+                        Organization · Internship recruiter
                      </p>
                   </div>
                </div>
-            </SectionCard>
+            </div>
 
-            <SectionCard title="About" subtitle="Short company introduction">
-               <p className="text-sm text-paragraph leading-relaxed">
-                  {profile.about}
+            {/* Info grid */}
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+               {infoItems.map(({ icon: Icon, label, value }) => (
+                  <div
+                     key={label}
+                     className="rounded-2xl border border-outline bg-white/90 p-4 shadow-sm"
+                  >
+                     <div className="flex items-center gap-2 mb-2">
+                        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10">
+                           <Icon className="h-3.5 w-3.5 text-primary" />
+                        </div>
+                        <p className="text-xs font-semibold uppercase tracking-wider text-label">
+                           {label}
+                        </p>
+                     </div>
+                     <p
+                        className={`text-sm font-medium ${value === "Not added" ? "text-label italic" : "text-primary"}`}
+                     >
+                        {value}
+                     </p>
+                  </div>
+               ))}
+            </div>
+
+            {/* About */}
+            <div className="rounded-2xl border border-outline bg-white/90 p-6 shadow-sm">
+               <h3 className="text-base font-semibold text-primary mb-3">
+                  About the company
+               </h3>
+               <p
+                  className={`text-sm leading-relaxed ${about.includes("Add a") ? "italic text-label" : "text-paragraph"}`}
+               >
+                  {about}
                </p>
-            </SectionCard>
+            </div>
          </div>
       </DashboardLayout>
    );

@@ -1,292 +1,329 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { Search } from "lucide-react";
+import {
+   Search,
+   Plus,
+   Users,
+   Calendar,
+   ToggleLeft,
+   ToggleRight,
+   Pencil,
+   ChevronDown,
+   ChevronUp,
+} from "lucide-react";
 import axiosInstance from "../../utils/axiosInstances";
 import { API_PATHS } from "../../utils/apiPaths";
 import DashboardLayout from "../../components/layout/DashboardLayout";
-import SectionCard from "../../components/cards/SectionCard";
 import StatusBadge from "../../components/cards/StatusBadge";
 import EmptyState from "../../components/cards/EmptyState";
+
+const formatDate = (d) =>
+   d
+      ? new Date(d).toLocaleDateString("en-US", {
+           month: "short",
+           day: "numeric",
+           year: "numeric",
+        })
+      : "—";
 
 const ManageJobs = () => {
    const [jobs, setJobs] = useState([]);
    const [query, setQuery] = useState("");
    const [statusFilter, setStatusFilter] = useState("All");
-   const [expandedJobId, setExpandedJobId] = useState(null);
-   const [statusUpdatingId, setStatusUpdatingId] = useState(null);
+   const [expandedId, setExpandedId] = useState(null);
+   const [togglingId, setTogglingId] = useState(null);
 
-   const getJobId = (job) => job.id || job._id;
-   const isJobClosed = (job) =>
-      typeof job.isClosed === "boolean"
-         ? job.isClosed
-         : String(job.status).toLowerCase() === "closed";
-   const getJobStatusLabel = (job) => (isJobClosed(job) ? "Closed" : "Open");
-   const formatDate = (dateStr) => {
-      if (!dateStr) return "—";
-      return new Date(dateStr).toLocaleDateString("en-US", {
-         month: "short",
-         day: "numeric",
-         year: "numeric",
-      });
-   };
+   const getId = (j) => j._id || j.id;
+   const isClosed = (j) =>
+      typeof j.isClosed === "boolean"
+         ? j.isClosed
+         : j.status?.toLowerCase() === "closed";
 
    useEffect(() => {
-      const fetchJobs = async () => {
-         try {
-            const response = await axiosInstance.get(
-               API_PATHS.JOBS.GET_JOBS_EMPLOYER,
-            );
-            if (response.status === 200) {
-               const nextJobs = (response.data || []).sort((a, b) => {
-                  const aDate = new Date(a.createdAt || 0).getTime();
-                  const bDate = new Date(b.createdAt || 0).getTime();
-                  return bDate - aDate;
-               });
-               setJobs(nextJobs);
-            }
-         } catch (error) {
-            setJobs([]);
-         }
-      };
-      fetchJobs();
+      axiosInstance
+         .get(API_PATHS.JOBS.GET_JOBS_EMPLOYER)
+         .then((res) =>
+            setJobs(
+               (res.data || []).sort(
+                  (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
+               ),
+            ),
+         )
+         .catch(() => setJobs([]));
    }, []);
 
-   const handleToggleStatus = async (job) => {
-      const jobId = getJobId(job);
-      if (!jobId) return;
-      const nextClosed = !isJobClosed(job);
-      const previousClosed = isJobClosed(job);
-      setStatusUpdatingId(jobId);
+   const handleToggle = async (job) => {
+      const id = getId(job);
+      const next = !isClosed(job);
+      setTogglingId(id);
       setJobs((prev) =>
-         prev.map((item) =>
-            getJobId(item) === jobId
-               ? {
-                    ...item,
-                    status: nextClosed ? "Closed" : "Open",
-                    isClosed: nextClosed,
-                 }
-               : item,
-         ),
+         prev.map((j) => (getId(j) === id ? { ...j, isClosed: next } : j)),
       );
       try {
-         await axiosInstance.put(API_PATHS.JOBS.TOGGLE_CLOSE(jobId));
-      } catch (error) {
-         // Rollback on failure
+         await axiosInstance.put(API_PATHS.JOBS.TOGGLE_CLOSE(id));
+      } catch {
          setJobs((prev) =>
-            prev.map((item) =>
-               getJobId(item) === jobId
-                  ? {
-                       ...item,
-                       status: previousClosed ? "Closed" : "Open",
-                       isClosed: previousClosed,
-                    }
-                  : item,
-            ),
+            prev.map((j) => (getId(j) === id ? { ...j, isClosed: !next } : j)),
          );
       } finally {
-         setStatusUpdatingId(null);
+         setTogglingId(null);
       }
    };
 
-   const filteredJobs = useMemo(() => {
-      return jobs.filter((job) => {
-         const matchesQuery = job.title
-            .toLowerCase()
-            .includes(query.toLowerCase());
-         const statusLabel = getJobStatusLabel(job).toLowerCase();
-         const matchesStatus =
-            statusFilter === "All" ||
-            statusLabel === statusFilter.toLowerCase();
-         return matchesQuery && matchesStatus;
-      });
-   }, [jobs, query, statusFilter]);
+   const filtered = useMemo(
+      () =>
+         jobs.filter((j) => {
+            const matchQ = j.title.toLowerCase().includes(query.toLowerCase());
+            const matchS =
+               statusFilter === "All" ||
+               (isClosed(j) ? "Closed" : "Open") === statusFilter;
+            return matchQ && matchS;
+         }),
+      [jobs, query, statusFilter],
+   );
+
+   const openCount = jobs.filter((j) => !isClosed(j)).length;
+   const closedCount = jobs.filter((j) => isClosed(j)).length;
 
    return (
       <DashboardLayout activeMenu="manage-jobs">
          <div className="space-y-6">
             <div className="flex flex-wrap items-start justify-between gap-4">
                <div>
-                  <h1 className="text-2xl font-semibold text-primary">
+                  <h1 className="text-2xl font-bold text-primary">
                      Manage internships
                   </h1>
                   <p className="mt-1 text-sm text-label">
-                     Review performance and keep listings updated.
+                     Review listings, track applicants, and control status.
                   </p>
                </div>
                <Link
                   to="/post-job"
-                  className="rounded-full bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-secondary"
+                  className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-secondary transition"
                >
-                  Post new role
+                  <Plus className="h-4 w-4" /> Post new role
                </Link>
             </div>
 
-            <SectionCard
-               title="Active listings"
-               subtitle="Track status, applicants, and quick actions."
-               action={
-                  <div className="flex flex-wrap items-center gap-3">
-                     <div className="relative">
-                        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-icon" />
-                        <input
-                           type="text"
-                           value={query}
-                           onChange={(e) => setQuery(e.target.value)}
-                           placeholder="Search roles"
-                           className="rounded-full border border-outline bg-white pl-9 pr-4 py-2 text-sm text-paragraph outline-none focus:border-accent focus:ring-2 focus:ring-accent/30"
-                        />
-                     </div>
-                     <select
-                        value={statusFilter}
-                        onChange={(e) => setStatusFilter(e.target.value)}
-                        className="rounded-full border border-outline bg-white px-4 py-2 text-sm text-paragraph outline-none focus:border-accent focus:ring-2 focus:ring-accent/30"
-                     >
-                        <option>All</option>
-                        <option>Open</option>
-                        <option>Closed</option>
-                     </select>
+            {/* Stats */}
+            <div className="grid grid-cols-3 gap-3">
+               {[
+                  {
+                     label: "Total listings",
+                     value: jobs.length,
+                     color: "text-primary",
+                  },
+                  { label: "Open", value: openCount, color: "text-success" },
+                  { label: "Closed", value: closedCount, color: "text-error" },
+               ].map((s) => (
+                  <div
+                     key={s.label}
+                     className="rounded-2xl border border-outline bg-white/90 p-4 shadow-sm"
+                  >
+                     <p className={`text-2xl font-bold ${s.color}`}>
+                        {s.value}
+                     </p>
+                     <p className="text-xs text-label mt-0.5">{s.label}</p>
                   </div>
-               }
-            >
-               {filteredJobs.length === 0 ? (
-                  <EmptyState
-                     title="No roles yet"
-                     description="Start by posting your first internship role."
-                     action={
-                        <Link
-                           to="/post-job"
-                           className="rounded-full bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-secondary"
-                        >
-                           Post internship
-                        </Link>
-                     }
+               ))}
+            </div>
+
+            {/* Filter bar */}
+            <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-outline bg-white/90 p-4 shadow-sm">
+               <div className="relative flex-1 min-w-[180px]">
+                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-icon" />
+                  <input
+                     type="text"
+                     value={query}
+                     onChange={(e) => setQuery(e.target.value)}
+                     placeholder="Search internships…"
+                     className="w-full rounded-full border border-outline bg-white pl-9 pr-4 py-2 text-sm text-paragraph outline-none focus:border-accent focus:ring-2 focus:ring-accent/30"
                   />
-               ) : (
-                  <div className="space-y-3">
-                     {filteredJobs.map((job) => {
-                        const jobId = getJobId(job);
-                        const isExpanded = expandedJobId === jobId;
-                        const applicantCount =
-                           job.applicants ||
-                           job.applicationCount ||
-                           job.applicationsCount ||
-                           job.applicantList?.length ||
-                           0;
-                        return (
-                           <div
-                              key={jobId}
-                              className="rounded-xl border border-outline bg-white/70 p-4"
-                           >
-                              <button
-                                 type="button"
-                                 onClick={() =>
-                                    setExpandedJobId(
-                                       isExpanded ? null : jobId,
-                                    )
-                                 }
-                                 className="flex w-full flex-wrap items-center justify-between gap-4 text-left"
-                              >
-                                 <div>
-                                    <p className="text-sm font-semibold text-primary">
-                                       {job.title}
-                                    </p>
-                                    <p className="text-xs text-label">
-                                       Posted {formatDate(job.createdAt)}
-                                    </p>
+               </div>
+               <div className="flex gap-1 rounded-xl border border-outline bg-white p-1">
+                  {["All", "Open", "Closed"].map((s) => (
+                     <button
+                        key={s}
+                        type="button"
+                        onClick={() => setStatusFilter(s)}
+                        className={`rounded-lg px-3 py-1.5 text-sm font-semibold transition ${statusFilter === s ? "bg-primary text-white" : "text-label hover:text-primary"}`}
+                     >
+                        {s}
+                     </button>
+                  ))}
+               </div>
+            </div>
+
+            {/* Job list */}
+            {filtered.length === 0 ? (
+               <div className="rounded-2xl border border-outline bg-white/90 p-8">
+                  <EmptyState
+                     title="No internships found"
+                     description="Post your first role or adjust your filters."
+                  />
+               </div>
+            ) : (
+               <div className="space-y-3">
+                  {filtered.map((job) => {
+                     const id = getId(job);
+                     const isOpen = expandedId === id;
+                     const closed = isClosed(job);
+                     const applicants =
+                        job.applicationCount || job.applicants || 0;
+
+                     return (
+                        <div
+                           key={id}
+                           className={`overflow-hidden rounded-2xl border bg-white/90 shadow-sm transition ${closed ? "border-outline/60 opacity-80" : "border-outline"}`}
+                        >
+                           <div className="p-5">
+                              <div className="flex flex-wrap items-start justify-between gap-3">
+                                 <div className="flex items-start gap-3 min-w-0 flex-1">
+                                    <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary/15 to-secondary/15 text-sm font-bold text-primary">
+                                       {job.title?.[0]?.toUpperCase() || "J"}
+                                    </div>
+                                    <div className="min-w-0">
+                                       <p className="text-sm font-semibold text-primary truncate">
+                                          {job.title}
+                                       </p>
+                                       <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-label">
+                                          <span className="flex items-center gap-1">
+                                             <Calendar className="h-3 w-3" />
+                                             Posted {formatDate(job.createdAt)}
+                                          </span>
+                                          <span className="flex items-center gap-1">
+                                             <Users className="h-3 w-3" />
+                                             {applicants} applicants
+                                          </span>
+                                          {job.deadline && (
+                                             <span>
+                                                Deadline:{" "}
+                                                {formatDate(job.deadline)}
+                                             </span>
+                                          )}
+                                       </div>
+                                    </div>
                                  </div>
-                                 <div className="flex items-center gap-4">
-                                    <span className="text-xs text-label">
-                                       {applicantCount} applicants
-                                    </span>
-                                    <StatusBadge status={getJobStatusLabel(job)} />
+                                 <div className="flex items-center gap-2 flex-shrink-0">
+                                    <StatusBadge
+                                       status={closed ? "Closed" : "Open"}
+                                    />
                                     <Link
-                                       to={`/post-job?jobId=${jobId}`}
-                                       onClick={(e) => e.stopPropagation()}
-                                       className="rounded-full border border-outline bg-white px-3 py-1 text-xs font-semibold text-primary hover:bg-neutral"
+                                       to={`/post-job?jobId=${id}`}
+                                       className="inline-flex items-center gap-1.5 rounded-full border border-outline bg-white px-3 py-1.5 text-xs font-semibold text-primary hover:bg-neutral transition"
                                     >
-                                       Edit job
+                                       <Pencil className="h-3 w-3" /> Edit
                                     </Link>
                                  </div>
-                              </button>
-                              <div className="mt-4 flex flex-wrap items-center gap-3">
-                                 <button
-                                    type="button"
-                                    onClick={(e) => {
-                                       e.stopPropagation();
-                                       handleToggleStatus(job);
-                                    }}
-                                    className="inline-flex items-center gap-2 rounded-full border border-outline bg-white px-3 py-1.5 text-xs font-semibold text-primary hover:bg-neutral"
-                                 >
-                                    <span
-                                       className={`relative inline-flex h-5 w-10 items-center rounded-full transition ${
-                                          isJobClosed(job)
-                                             ? "bg-error/30"
-                                             : "bg-success/30"
-                                       }`}
-                                    >
-                                       <span
-                                          className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition ${
-                                             isJobClosed(job)
-                                                ? "translate-x-1"
-                                                : "translate-x-5"
-                                          }`}
-                                       />
-                                    </span>
-                                    {statusUpdatingId === jobId
-                                       ? "Updating..."
-                                       : getJobStatusLabel(job)}
-                                 </button>
                               </div>
-                              {isExpanded && (
-                                 <div className="mt-4 rounded-xl border border-outline bg-white/80 p-4">
-                                    <p className="text-xs uppercase tracking-[0.2em] text-label">
-                                       Applicants
-                                    </p>
-                                    {job.applicantList?.length ? (
-                                       <div className="mt-3 space-y-3">
-                                          {job.applicantList.map((applicant) => (
-                                             <div
-                                                key={applicant.id}
-                                                className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-outline bg-white/70 p-3"
-                                             >
-                                                <div>
-                                                   <p className="text-sm font-semibold text-primary">
-                                                      {applicant.name}
-                                                   </p>
-                                                   <p className="text-xs text-label">
-                                                      {applicant.email}
-                                                   </p>
-                                                </div>
-                                                <div className="flex items-center gap-3 text-xs text-primary">
-                                                   <a
-                                                      href={applicant.profileUrl}
-                                                      className="font-semibold"
-                                                   >
-                                                      View profile
-                                                   </a>
-                                                   <a
-                                                      href={applicant.resumeUrl}
-                                                      className="font-semibold"
-                                                   >
-                                                      View resume
-                                                   </a>
-                                                </div>
-                                             </div>
-                                          ))}
-                                       </div>
-                                    ) : (
-                                       <p className="mt-3 text-sm text-label">
-                                          No applicants yet.
-                                       </p>
-                                    )}
+
+                              <div className="mt-4 flex flex-wrap items-center gap-2">
+                                 {job.workMode && (
+                                    <span className="rounded-full bg-neutral px-2.5 py-0.5 text-xs text-label">
+                                       {job.workMode}
+                                    </span>
+                                 )}
+                                 {job.category && (
+                                    <span className="rounded-full bg-neutral px-2.5 py-0.5 text-xs text-label">
+                                       {job.category}
+                                    </span>
+                                 )}
+                                 {job.stipend && (
+                                    <span className="rounded-full bg-success/10 px-2.5 py-0.5 text-xs font-semibold text-success">
+                                       ฿{job.stipend}/mo
+                                    </span>
+                                 )}
+
+                                 <div className="ml-auto flex items-center gap-2">
+                                    <button
+                                       type="button"
+                                       onClick={() => handleToggle(job)}
+                                       disabled={togglingId === id}
+                                       className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition disabled:opacity-60 ${closed ? "border-success/30 bg-success/5 text-success hover:bg-success/10" : "border-error/30 bg-error/5 text-error hover:bg-error/10"}`}
+                                    >
+                                       {closed ? (
+                                          <ToggleLeft className="h-3.5 w-3.5" />
+                                       ) : (
+                                          <ToggleRight className="h-3.5 w-3.5" />
+                                       )}
+                                       {togglingId === id
+                                          ? "Updating…"
+                                          : closed
+                                            ? "Reopen"
+                                            : "Close"}
+                                    </button>
+                                    <button
+                                       type="button"
+                                       onClick={() =>
+                                          setExpandedId(isOpen ? null : id)
+                                       }
+                                       className="inline-flex items-center gap-1.5 rounded-full border border-outline bg-white px-3 py-1.5 text-xs font-semibold text-primary hover:bg-neutral transition"
+                                    >
+                                       {isOpen ? (
+                                          <ChevronUp className="h-3.5 w-3.5" />
+                                       ) : (
+                                          <ChevronDown className="h-3.5 w-3.5" />
+                                       )}
+                                       {isOpen ? "Hide" : "View applicants"}
+                                    </button>
                                  </div>
-                              )}
+                              </div>
                            </div>
-                        );
-                     })}
-                  </div>
-               )}
-            </SectionCard>
+
+                           {/* Expanded applicants */}
+                           {isOpen && (
+                              <div className="border-t border-outline bg-neutral/30 px-5 py-4">
+                                 <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-label">
+                                    Applicants ({applicants})
+                                 </p>
+                                 {job.applicantList?.length ? (
+                                    <div className="space-y-2">
+                                       {job.applicantList.map((a) => (
+                                          <div
+                                             key={a.id}
+                                             className="flex items-center justify-between rounded-xl border border-outline bg-white px-4 py-3"
+                                          >
+                                             <div>
+                                                <p className="text-sm font-semibold text-primary">
+                                                   {a.name}
+                                                </p>
+                                                <p className="text-xs text-label">
+                                                   {a.email}
+                                                </p>
+                                             </div>
+                                             <div className="flex gap-3 text-xs font-semibold text-primary">
+                                                {a.profileUrl && (
+                                                   <a
+                                                      href={a.profileUrl}
+                                                      className="hover:text-secondary transition"
+                                                   >
+                                                      Profile
+                                                   </a>
+                                                )}
+                                                {a.resumeUrl && (
+                                                   <a
+                                                      href={a.resumeUrl}
+                                                      className="hover:text-secondary transition"
+                                                   >
+                                                      Resume
+                                                   </a>
+                                                )}
+                                             </div>
+                                          </div>
+                                       ))}
+                                    </div>
+                                 ) : (
+                                    <p className="text-sm text-label">
+                                       No applicants yet for this role.
+                                    </p>
+                                 )}
+                              </div>
+                           )}
+                        </div>
+                     );
+                  })}
+               </div>
+            )}
          </div>
       </DashboardLayout>
    );

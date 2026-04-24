@@ -1,9 +1,10 @@
 import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import {
-   ArrowUpRight,
+   ArrowRight,
    BadgeCheck,
    Briefcase,
+   CalendarDays,
    GraduationCap,
    Search,
    Send,
@@ -11,6 +12,8 @@ import {
    Target,
    UserPlus,
    Users,
+   CheckCircle2,
+   Zap,
 } from "lucide-react";
 
 import SectionHeader from "./components/SectionHeader";
@@ -40,8 +43,7 @@ const steps = [
    {
       icon: BadgeCheck,
       title: "Grow with feedback",
-      description:
-         "Get clear updates and next steps from responsive teams.",
+      description: "Get clear updates and next steps from responsive teams.",
    },
 ];
 
@@ -59,17 +61,24 @@ const features = [
          "Teams can post, review, and respond without messy email chains.",
    },
    {
-      icon: Sparkles,
-      title: "Guided next steps",
+      icon: CalendarDays,
+      title: "Events & workshops",
       description:
-         "Friendly prompts help applicants build profiles and apply with confidence.",
+         "Join webinars, seminars, and career events posted by top organizations.",
    },
    {
-      icon: Briefcase,
+      icon: Zap,
       title: "Growth-ready foundation",
       description:
-         "Designed to expand into full-time roles, events, and mentorship soon.",
+         "Designed to expand into full-time roles, mentorship, and more.",
    },
+];
+
+const highlights = [
+   "Profile in under 2 minutes",
+   "Internship-only listings",
+   "Track every application",
+   "Events & career workshops",
 ];
 
 const LandingPage = () => {
@@ -84,36 +93,38 @@ const LandingPage = () => {
                }
             });
          },
-         { threshold: 0.15, rootMargin: "0px 0px -10% 0px" }
+         { threshold: 0.12, rootMargin: "0px 0px -8% 0px" },
       );
-
       elements.forEach((el) => observer.observe(el));
-
       return () => observer.disconnect();
    }, []);
 
    return (
       <div className="min-h-screen bg-neutral text-paragraph">
-         <nav className="sticky top-0 z-50 border-b border-outline/60 bg-neutral/90 backdrop-blur">
+         {/* ── NAV ── */}
+         <nav className="sticky top-0 z-50 border-b border-outline/60 bg-neutral/95 backdrop-blur-md">
             <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 sm:px-6 py-4">
-               <div className="flex items-center gap-2 text-xl font-semibold text-primary">
-                  <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-white">
+               <Link
+                  to="/"
+                  className="flex items-center gap-2.5 text-xl font-bold text-primary"
+               >
+                  <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-white text-sm font-bold">
                      B
                   </span>
                   Beaconn
-               </div>
+               </Link>
                <div className="hidden items-center gap-8 text-sm text-label md:flex">
-                  <a href="#features" className="hover:text-primary">
+                  <a href="#features" className="hover:text-primary transition">
                      Features
                   </a>
-                  <a href="#paths" className="hover:text-primary">
+                  <a href="#paths" className="hover:text-primary transition">
                      Paths
                   </a>
-                  <a href="#steps" className="hover:text-primary">
+                  <a href="#steps" className="hover:text-primary transition">
                      How it works
                   </a>
                </div>
-               <div className="flex items-center gap-3">
+               <div className="flex items-center gap-2">
                   <Link
                      to="/Login"
                      className="rounded-full px-4 py-2 text-sm font-semibold text-primary transition hover:bg-white"
@@ -122,77 +133,89 @@ const LandingPage = () => {
                   </Link>
                   <Link
                      to="/Signup"
-                     className="inline-flex items-center rounded-full bg-primary px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-secondary"
+                     className="inline-flex items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-secondary"
                   >
-                     Sign up
+                     Get started <ArrowRight className="h-3.5 w-3.5" />
                   </Link>
                </div>
             </div>
          </nav>
 
+         {/* ── HERO ── */}
          <section className="relative overflow-hidden">
-            <div className="absolute -top-32 right-0 h-72 w-72 rounded-full bg-secondary/20 blur-3xl" />
-            <div className="absolute -left-24 top-32 h-72 w-72 rounded-full bg-accent/20 blur-3xl" />
+            {/* Blobs */}
+            <div className="pointer-events-none absolute -top-40 right-0 h-[480px] w-[480px] rounded-full bg-secondary/15 blur-3xl" />
+            <div className="pointer-events-none absolute -left-24 top-40 h-80 w-80 rounded-full bg-accent/15 blur-3xl" />
 
-            <div className="relative mx-auto grid w-full max-w-6xl items-center gap-12 px-4 sm:px-6 pb-20 pt-10 sm:pt-12 lg:grid-cols-[1.1fr_0.9fr]">
-               <div className="space-y-6">
-                  <div className="inline-flex items-center gap-2 rounded-full border border-outline bg-white/70 px-4 py-2 text-xs uppercase tracking-[0.2em] text-label">
-                     <Sparkles className="h-4 w-4 text-accent" />
+            <div className="relative mx-auto grid w-full max-w-6xl items-center gap-14 px-4 sm:px-6 pb-24 pt-14 lg:grid-cols-[1.15fr_0.85fr]">
+               {/* Left copy */}
+               <div className="space-y-7">
+                  <div className="inline-flex items-center gap-2 rounded-full border border-outline bg-white/80 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-label shadow-sm">
+                     <Sparkles className="h-3.5 w-3.5 text-accent" />
                      Career development platform
                   </div>
-                  <h1 className="text-4xl font-semibold text-primary sm:text-5xl lg:text-6xl">
-                     Beaconn is a guiding light for emerging careers.
+                  <h1 className="text-4xl font-bold text-primary leading-tight sm:text-5xl lg:text-[3.5rem]">
+                     Beaconn is a guiding light for{" "}
+                     <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+                        emerging careers.
+                     </span>
                   </h1>
-                  <p className="text-base text-paragraph sm:text-lg">
-                     A clean, friendly place to discover internships, connect
-                     with organizations, and take your first confident step into
-                     the industry. Built to expand into a full career platform
-                     as we grow.
+                  <p className="text-base text-paragraph sm:text-lg max-w-lg leading-relaxed">
+                     Discover internships, join career events, and connect with
+                     organizations — all in one clean, focused platform built
+                     for early talent.
                   </p>
-                  <div className="flex flex-wrap items-center gap-4">
+                  <div className="flex flex-wrap items-center gap-3">
                      <Link
                         to="/Signup"
-                        className="inline-flex items-center gap-2 rounded-full bg-primary px-4 sm:px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-secondary"
+                        className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-secondary"
                      >
-                        Start your journey
-                        <ArrowUpRight className="h-4 w-4" />
+                        Start your journey <ArrowRight className="h-4 w-4" />
+                     </Link>
+                     <Link
+                        to="/Login"
+                        className="inline-flex items-center gap-2 rounded-full border border-outline bg-white px-6 py-3 text-sm font-semibold text-primary transition hover:bg-neutral"
+                     >
+                        Sign in
                      </Link>
                   </div>
-                  <div className="grid gap-3 sm:grid-cols-3">
-                     <StatCard value="200+" label="Internship Roles" />
-                     <StatCard value="3k+" label="Active Applicants" />
-                     <StatCard value="60+" label="Partner Teams" />
+                  <div className="grid grid-cols-3 gap-3 pt-2">
+                     <StatCard value="200+" label="Open Roles" />
+                     <StatCard value="3k+" label="Candidates" />
+                     <StatCard value="60+" label="Partners" />
                   </div>
                </div>
 
+               {/* Right spotlight card */}
                <div className="relative reveal">
-                  <div className="rounded-3xl border border-outline bg-white/90 p-8 shadow-lg">
-                     <div className="flex items-center justify-between">
+                  <div className="rounded-3xl border border-outline bg-white/95 p-7 shadow-xl backdrop-blur">
+                     <div className="flex items-start justify-between gap-3">
                         <div>
-                           <p className="text-xs uppercase tracking-[0.2em] text-label">
+                           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-label">
                               Internship spotlight
                            </p>
-                           <h3 className="mt-2 text-xl font-semibold text-primary">
+                           <h3 className="mt-2 text-xl font-bold text-primary">
                               Beaconn Launch Internships
                            </h3>
                         </div>
-                        <span className="rounded-full bg-secondary/20 px-3 py-1 text-xs font-semibold text-secondary">
+                        <span className="flex-shrink-0 rounded-full bg-success/15 px-3 py-1 text-xs font-bold text-success">
                            Now open
                         </span>
                      </div>
-                     <p className="mt-4 text-sm text-paragraph">
+                     <p className="mt-4 text-sm text-paragraph leading-relaxed">
                         Fresh roles from trusted teams, designed for students
                         and early career talent who want real-world experience.
                      </p>
-                     <div className="mt-6 space-y-4">
+                     <div className="mt-5 space-y-3">
                         {[
                            {
                               icon: Briefcase,
                               label: "Internship-first opportunities",
                            },
+                           { icon: Target, label: "Clear role expectations" },
                            {
-                              icon: Target,
-                              label: "Clear role expectations",
+                              icon: CalendarDays,
+                              label: "Career events & workshops",
                            },
                            {
                               icon: Users,
@@ -203,23 +226,33 @@ const LandingPage = () => {
                               key={item.label}
                               className="flex items-center gap-3 text-sm text-label"
                            >
-                              <item.icon className="h-4 w-4 text-accent" />
+                              <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg bg-primary/10">
+                                 <item.icon className="h-3.5 w-3.5 text-primary" />
+                              </div>
                               {item.label}
                            </div>
                         ))}
                      </div>
+                     <Link
+                        to="/Signup"
+                        className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3 text-sm font-semibold text-white transition hover:bg-secondary"
+                     >
+                        Browse internships <ArrowRight className="h-4 w-4" />
+                     </Link>
                   </div>
-                  <div className="absolute -bottom-8 -left-8 hidden rounded-2xl border border-outline bg-white/90 p-4 shadow-md lg:block">
+
+                  {/* Floating badge */}
+                  <div className="absolute -bottom-6 -left-6 hidden rounded-2xl border border-outline bg-white/95 p-4 shadow-lg lg:block">
                      <div className="flex items-center gap-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-neutral">
-                           <Target className="h-5 w-5 text-primary" />
+                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-success/10">
+                           <CheckCircle2 className="h-5 w-5 text-success" />
                         </div>
                         <div>
-                           <p className="text-xs uppercase tracking-[0.2em] text-label">
-                              Match rate
+                           <p className="text-xs text-label">
+                              Verified fit rate
                            </p>
-                           <p className="text-lg font-semibold text-primary">
-                              92% verified fit
+                           <p className="text-lg font-bold text-primary">
+                              92% match
                            </p>
                         </div>
                      </div>
@@ -228,36 +261,40 @@ const LandingPage = () => {
             </div>
          </section>
 
-         <section id="paths" className="mx-auto w-full max-w-6xl px-4 sm:px-6 py-12 sm:py-16 reveal">
+         {/* ── PATHS ── */}
+         <section
+            id="paths"
+            className="mx-auto w-full max-w-6xl px-4 sm:px-6 py-16 reveal"
+         >
             <SectionHeader
                eyebrow="Choose your path"
                title="Two tailored experiences, one shared mission."
                subtitle="Whether you are growing your career or building a team, Beaconn keeps everything focused and easy to navigate."
             />
             <div className="mt-10 grid gap-6 lg:grid-cols-2">
-               <div className="reveal" style={{ "--delay": "60ms" }}>
+               <div className="reveal">
                   <RoleCard
                      icon={GraduationCap}
                      title="For Candidates"
-                     description="Build your career with curated internship roles, quick applications, and direct access to teams who want to meet you."
+                     description="Build your career with curated internship roles, career events, quick applications, and direct access to teams who want to meet you."
                      bullets={[
                         "Personalized internship feed",
-                        "Profile-first application flow",
+                        "Browse & register for events",
                         "Clear next-step guidance",
                      ]}
                      actionLabel="Build your career"
                      actionTo="/Signup"
                   />
                </div>
-               <div className="reveal" style={{ "--delay": "120ms" }}>
+               <div className="reveal" style={{ "--delay": "80ms" }}>
                   <RoleCard
                      icon={Briefcase}
                      title="For Organizations"
-                     description="Post internship opportunities and meet motivated applicants with a workflow that keeps hiring simple."
+                     description="Post internship opportunities and events, then meet motivated applicants with a workflow that keeps hiring simple."
                      bullets={[
                         "Targeted internship posting",
+                        "Post workshops & webinars",
                         "Shortlists in one dashboard",
-                        "Fast feedback loops",
                      ]}
                      actionLabel="Post opportunities"
                      actionTo="/Signup"
@@ -266,22 +303,26 @@ const LandingPage = () => {
             </div>
          </section>
 
-         <section id="features" className="relative overflow-hidden py-12 sm:py-16 reveal">
-            <div className="absolute -top-32 left-1/3 h-72 w-72 rounded-full bg-primary/10 blur-3xl" />
-            <div className="absolute -bottom-24 right-0 h-72 w-72 rounded-full bg-secondary/20 blur-3xl" />
+         {/* ── FEATURES ── */}
+         <section
+            id="features"
+            className="relative overflow-hidden py-16 reveal"
+         >
+            <div className="pointer-events-none absolute -top-32 left-1/3 h-72 w-72 rounded-full bg-primary/10 blur-3xl" />
+            <div className="pointer-events-none absolute -bottom-24 right-0 h-72 w-72 rounded-full bg-secondary/20 blur-3xl" />
             <div className="mx-auto w-full max-w-6xl px-4 sm:px-6">
-               <div className="rounded-3xl border border-outline bg-white/80 p-8 shadow-lg backdrop-blur">
+               <div className="rounded-3xl border border-outline bg-white/85 p-8 shadow-lg backdrop-blur">
                   <SectionHeader
                      eyebrow="Why Beaconn"
                      title="A welcoming start for new careers."
-                     subtitle="Beaconn is a steady guide for people building a future without a clear platform. We are focused on internships today, and growing toward a full career journey tomorrow."
+                     subtitle="Beaconn is a steady guide for people building a future. We are focused on internships and events today, growing toward a full career journey tomorrow."
                   />
-                  <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-                     {features.map((feature, index) => (
+                  <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+                     {features.map((feature, i) => (
                         <div
                            key={feature.title}
                            className="reveal"
-                           style={{ "--delay": `${index * 60}ms` }}
+                           style={{ "--delay": `${i * 60}ms` }}
                         >
                            <FeatureCard {...feature} />
                         </div>
@@ -291,86 +332,91 @@ const LandingPage = () => {
             </div>
          </section>
 
-         <section id="steps" className="mx-auto w-full max-w-6xl px-4 sm:px-6 py-12 sm:py-16 reveal">
-            <div className="flex flex-col gap-10">
-               <SectionHeader
-                  eyebrow="How it works"
-                  title="Four simple steps to your first internship."
-                  subtitle="No clutter. Just a clear path from profile to offer-ready."
-               />
-               <div className="relative grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-                  <div className="absolute left-6 right-6 top-1/2 hidden h-px -translate-y-1/2 bg-outline/70 lg:block" />
-                  {steps.map((step, index) => (
-                     <div
-                        key={step.title}
-                        className="relative rounded-3xl border border-outline bg-white/80 p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-md reveal"
-                        style={{ "--delay": `${index * 70}ms` }}
-                     >
-                        <div className="flex items-center justify-between">
-                           <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-neutral">
-                              <step.icon className="h-5 w-5 text-primary" />
-                           </div>
-                           <span className="text-xs font-semibold text-label">
-                              0{index + 1}
-                           </span>
+         {/* ── HOW IT WORKS ── */}
+         <section
+            id="steps"
+            className="mx-auto w-full max-w-6xl px-4 sm:px-6 py-16 reveal"
+         >
+            <SectionHeader
+               eyebrow="How it works"
+               title="Four simple steps to your first internship."
+               subtitle="No clutter. Just a clear path from profile to offer-ready."
+            />
+            <div className="relative mt-10 grid gap-5 md:grid-cols-2 lg:grid-cols-4">
+               <div className="absolute left-6 right-6 top-[2.2rem] hidden h-px bg-gradient-to-r from-outline via-primary/20 to-outline lg:block" />
+               {steps.map((step, i) => (
+                  <div
+                     key={step.title}
+                     className="relative rounded-2xl border border-outline bg-white/90 p-6 shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-md reveal"
+                     style={{ "--delay": `${i * 70}ms` }}
+                  >
+                     <div className="flex items-center justify-between">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10">
+                           <step.icon className="h-5 w-5 text-primary" />
                         </div>
-                        <h3 className="mt-6 text-lg font-semibold text-primary">
-                           {step.title}
-                        </h3>
-                        <p className="mt-2 text-sm text-paragraph">
-                           {step.description}
-                        </p>
+                        <span className="text-2xl font-bold text-outline">
+                           0{i + 1}
+                        </span>
                      </div>
-                  ))}
-               </div>
+                     <h3 className="mt-5 text-base font-bold text-primary">
+                        {step.title}
+                     </h3>
+                     <p className="mt-2 text-sm text-paragraph leading-relaxed">
+                        {step.description}
+                     </p>
+                  </div>
+               ))}
             </div>
          </section>
 
-         <section className="relative overflow-hidden py-12 sm:py-16 reveal">
-            <div className="absolute -left-24 top-0 h-64 w-64 rounded-full bg-accent/20 blur-3xl" />
-            <div className="absolute -bottom-24 right-0 h-64 w-64 rounded-full bg-secondary/20 blur-3xl" />
+         {/* ── CTA ── */}
+         <section className="relative overflow-hidden py-16 reveal">
+            <div className="pointer-events-none absolute inset-0 -z-10">
+               <div className="absolute -left-24 top-0 h-64 w-64 rounded-full bg-accent/20 blur-3xl" />
+               <div className="absolute -bottom-24 right-0 h-64 w-64 rounded-full bg-secondary/20 blur-3xl" />
+            </div>
             <div className="mx-auto w-full max-w-6xl px-4 sm:px-6">
-               <div className="grid items-center gap-10 rounded-3xl border border-outline bg-primary px-8 py-10 text-white shadow-xl md:grid-cols-[1.2fr_0.8fr]">
+               <div className="grid items-center gap-10 overflow-hidden rounded-3xl border border-outline/20 bg-primary px-8 py-12 shadow-2xl md:grid-cols-[1.2fr_0.8fr]">
                   <div>
-                     <span className="text-xs uppercase tracking-[0.25em] text-white/70">
+                     <span className="text-xs font-semibold uppercase tracking-[0.25em] text-white/60">
                         Ready to get started
                      </span>
-                     <h2 className="mt-4 text-3xl font-semibold md:text-4xl">
+                     <h2 className="mt-4 text-3xl font-bold text-white md:text-4xl leading-tight">
                         Your internship journey starts with one account.
                      </h2>
-                     <p className="mt-3 text-sm text-white/80">
+                     <p className="mt-3 text-sm text-white/75 leading-relaxed max-w-md">
                         Join Beaconn today, build your profile, and start
-                        applying to internships designed for early talent.
+                        applying to internships and career events designed for
+                        early talent.
                      </p>
-                     <div className="mt-6 flex flex-wrap items-center gap-3">
+                     <div className="mt-7 flex flex-wrap items-center gap-3">
                         <Link
                            to="/Signup"
-                           className="inline-flex items-center rounded-full bg-white px-5 py-2 text-sm font-semibold text-primary shadow-sm transition hover:bg-neutral"
+                           className="inline-flex items-center gap-2 rounded-full bg-white px-6 py-2.5 text-sm font-bold text-primary shadow-sm transition hover:bg-neutral"
                         >
-                           Create your account
+                           Create your account{" "}
+                           <ArrowRight className="h-4 w-4" />
                         </Link>
                         <Link
                            to="/Login"
-                           className="inline-flex items-center rounded-full border border-white/60 px-5 py-2 text-sm font-semibold text-white transition hover:bg-white/10"
+                           className="inline-flex items-center gap-2 rounded-full border border-white/30 px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-white/10"
                         >
                            Sign in
                         </Link>
                      </div>
                   </div>
-                  <div className="grid gap-4">
-                     {[
-                        "Profile in minutes",
-                        "Internship-only listings",
-                        "Track every application",
-                     ].map((item) => (
+                  <div className="grid gap-3">
+                     {highlights.map((item) => (
                         <div
                            key={item}
-                           className="flex items-center gap-3 rounded-2xl border border-white/20 bg-white/10 p-4"
+                           className="flex items-center gap-3 rounded-2xl border border-white/15 bg-white/10 p-4 backdrop-blur"
                         >
-                           <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/15">
-                              <Sparkles className="h-5 w-5" />
+                           <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-white/15">
+                              <CheckCircle2 className="h-4 w-4 text-white" />
                            </span>
-                           <span className="text-sm font-semibold">{item}</span>
+                           <span className="text-sm font-semibold text-white">
+                              {item}
+                           </span>
                         </div>
                      ))}
                   </div>
@@ -378,18 +424,32 @@ const LandingPage = () => {
             </div>
          </section>
 
-         <footer className="mx-auto w-full max-w-6xl px-4 sm:px-6 py-10 text-sm text-label reveal">
-            <div className="flex flex-col gap-4 border-t border-outline pt-6 sm:flex-row sm:items-center sm:justify-between">
-               <div className="flex items-center gap-3 text-primary font-semibold">
-                  <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-white text-xs">
+         {/* ── FOOTER ── */}
+         <footer className="mx-auto w-full max-w-6xl px-4 sm:px-6 py-10">
+            <div className="flex flex-col gap-4 border-t border-outline pt-6 sm:flex-row sm:items-center sm:justify-between text-sm text-label">
+               <Link
+                  to="/"
+                  className="flex items-center gap-2.5 font-bold text-primary"
+               >
+                  <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary text-white text-xs font-bold">
                      B
                   </span>
                   Beaconn
+               </Link>
+               <div className="flex flex-wrap items-center gap-6">
+                  <a href="#features" className="hover:text-primary transition">
+                     Features
+                  </a>
+                  <a href="#paths" className="hover:text-primary transition">
+                     Paths
+                  </a>
+                  <a href="#steps" className="hover:text-primary transition">
+                     How it works
+                  </a>
                </div>
-               <div className="flex flex-wrap items-center gap-4">
-                  <span>Modern career development, built for 2026.</span>
-                  <span className="text-xs text-label">(c) 2026 Beaconn</span>
-               </div>
+               <span className="text-xs">
+                  © 2026 Beaconn · Modern career development
+               </span>
             </div>
          </footer>
       </div>
@@ -397,4 +457,3 @@ const LandingPage = () => {
 };
 
 export default LandingPage;
-

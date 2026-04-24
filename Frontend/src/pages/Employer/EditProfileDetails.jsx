@@ -1,12 +1,11 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Upload } from "lucide-react";
+import { Upload, Camera, CheckCircle2, ArrowLeft } from "lucide-react";
 import axiosInstance from "../../utils/axiosInstances";
 import { API_PATHS } from "../../utils/apiPaths";
 import { useAuth } from "../../context/AuthContext";
 import uploadImage from "../../utils/uploadImage";
 import DashboardLayout from "../../components/layout/DashboardLayout";
-import SectionCard from "../../components/cards/SectionCard";
 import TextInput from "../../components/input/TextInput";
 import TextArea from "../../components/input/TextArea";
 
@@ -14,16 +13,17 @@ const EditProfileDetails = () => {
    const { user, updateUser } = useAuth();
    const [formData, setFormData] = useState({
       companyName: user?.companyName || user?.name || "",
-      email: user?.companyEmail || user?.email || "",
+      email: user?.email || "",
       website: user?.website || "",
       size: user?.companySize || "",
       industry: user?.industry || "",
       location: user?.location || "",
-      about: user?.about || "",
-      logo: user?.logo || user?.avatar || "",
+      about: user?.companyDescription || user?.about || "",
+      logo: user?.companyLogo || user?.avatar || "",
       logoFile: null,
    });
    const [statusMessage, setStatusMessage] = useState("");
+   const [statusType, setStatusType] = useState(""); // "success" | "error"
    const [isSaving, setIsSaving] = useState(false);
 
    const handleChange = (e) => {
@@ -45,23 +45,30 @@ const EditProfileDetails = () => {
       e.preventDefault();
       setIsSaving(true);
       setStatusMessage("");
-
       try {
          let logoUrl = formData.logo;
          if (formData.logoFile) {
-            const imgUploadRes = await uploadImage(formData.logoFile);
-            logoUrl = imgUploadRes.imageUrl || logoUrl;
+            const res = await uploadImage(formData.logoFile);
+            logoUrl = res.imageUrl || logoUrl;
          }
-
          await axiosInstance.put(API_PATHS.AUTH.UPDATE_PROFILE, {
-            ...formData,
-            logo: logoUrl,
+            name: formData.companyName,
+            companyName: formData.companyName,
+            companyDescription: formData.about,
+            companyLogo: logoUrl,
+            avatar: logoUrl,
          });
-         updateUser({ ...formData, logo: logoUrl });
+         updateUser({
+            companyName: formData.companyName,
+            companyDescription: formData.about,
+            companyLogo: logoUrl,
+            avatar: logoUrl,
+         });
          setStatusMessage("Profile updated successfully.");
-      } catch (error) {
-         updateUser(formData);
-         setStatusMessage("Saved locally. Sync when backend is ready.");
+         setStatusType("success");
+      } catch {
+         setStatusMessage("Unable to save changes. Please try again.");
+         setStatusType("error");
       } finally {
          setIsSaving(false);
       }
@@ -72,7 +79,7 @@ const EditProfileDetails = () => {
          <div className="space-y-6">
             <div className="flex flex-wrap items-start justify-between gap-4">
                <div>
-                  <h1 className="text-2xl font-semibold text-primary">
+                  <h1 className="text-2xl font-bold text-primary">
                      Edit company profile
                   </h1>
                   <p className="mt-1 text-sm text-label">
@@ -81,14 +88,70 @@ const EditProfileDetails = () => {
                </div>
                <Link
                   to="/company-profile"
-                  className="rounded-full border border-outline bg-white px-4 py-2 text-sm font-semibold text-primary hover:bg-neutral"
+                  className="inline-flex items-center gap-2 rounded-full border border-outline bg-white px-4 py-2 text-sm font-semibold text-primary hover:bg-neutral transition"
                >
-                  Back to profile
+                  <ArrowLeft className="h-4 w-4" /> Back to profile
                </Link>
             </div>
 
-            <form onSubmit={handleSave} className="space-y-6">
-               <SectionCard title="Company details">
+            <form onSubmit={handleSave} className="space-y-5">
+               {/* Logo upload */}
+               <div className="rounded-2xl border border-outline bg-white/90 p-6 shadow-sm">
+                  <h2 className="text-base font-semibold text-primary mb-4">
+                     Company logo
+                  </h2>
+                  <div className="flex items-center gap-5">
+                     <div className="relative">
+                        <div className="h-20 w-20 overflow-hidden rounded-2xl border border-outline bg-neutral flex items-center justify-center">
+                           {formData.logo ? (
+                              <img
+                                 src={formData.logo}
+                                 alt="Logo"
+                                 className="h-full w-full object-cover"
+                              />
+                           ) : (
+                              <span className="text-xl font-bold text-icon">
+                                 {(formData.companyName ||
+                                    "C")[0].toUpperCase()}
+                              </span>
+                           )}
+                        </div>
+                        <label
+                           htmlFor="logo-upload"
+                           className="absolute -bottom-1 -right-1 flex h-7 w-7 cursor-pointer items-center justify-center rounded-full border-2 border-white bg-primary shadow hover:bg-secondary transition"
+                        >
+                           <Camera className="h-3.5 w-3.5 text-white" />
+                        </label>
+                        <input
+                           id="logo-upload"
+                           type="file"
+                           accept=".png,.jpg,.jpeg"
+                           onChange={handleLogoChange}
+                           className="hidden"
+                        />
+                     </div>
+                     <div>
+                        <p className="text-sm font-semibold text-primary">
+                           Upload company logo
+                        </p>
+                        <p className="text-xs text-label mt-0.5">
+                           PNG or JPG · Max 5MB · Square recommended
+                        </p>
+                        <label
+                           htmlFor="logo-upload"
+                           className="mt-2 inline-flex cursor-pointer items-center gap-1.5 rounded-xl border border-outline bg-white px-3 py-1.5 text-xs font-semibold text-primary hover:bg-neutral transition"
+                        >
+                           <Upload className="h-3.5 w-3.5" /> Choose file
+                        </label>
+                     </div>
+                  </div>
+               </div>
+
+               {/* Company details */}
+               <div className="rounded-2xl border border-outline bg-white/90 p-6 shadow-sm">
+                  <h2 className="text-base font-semibold text-primary mb-4">
+                     Company details
+                  </h2>
                   <div className="grid gap-4 sm:grid-cols-2">
                      <TextInput
                         label="Company name"
@@ -102,7 +165,7 @@ const EditProfileDetails = () => {
                         name="email"
                         value={formData.email}
                         onChange={handleChange}
-                        placeholder="hello@beaconn.io"
+                        placeholder="hello@company.com"
                         type="email"
                      />
                      <TextInput
@@ -110,14 +173,14 @@ const EditProfileDetails = () => {
                         name="website"
                         value={formData.website}
                         onChange={handleChange}
-                        placeholder="www.beaconn.io"
+                        placeholder="www.company.com"
                      />
                      <TextInput
                         label="Company size"
                         name="size"
                         value={formData.size}
                         onChange={handleChange}
-                        placeholder="51-200"
+                        placeholder="51–200 employees"
                      />
                      <TextInput
                         label="Industry"
@@ -134,66 +197,47 @@ const EditProfileDetails = () => {
                         placeholder="Bangkok, Thailand"
                      />
                   </div>
-               </SectionCard>
+               </div>
 
-               <SectionCard title="Company logo">
-                  <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-                     <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-neutral">
-                        {formData.logo ? (
-                           <img
-                              src={formData.logo}
-                              alt="Company logo"
-                              className="h-16 w-16 rounded-2xl object-cover"
-                           />
-                        ) : (
-                           <span className="text-xs text-label">Logo</span>
-                        )}
-                     </div>
-                     <div>
-                        <input
-                           id="logo"
-                           type="file"
-                           accept=".png,.jpg,.jpeg"
-                           onChange={handleLogoChange}
-                           className="hidden"
-                        />
-                        <label
-                           htmlFor="logo"
-                           className="inline-flex items-center gap-2 rounded-lg border border-outline bg-white px-4 py-2 text-sm font-semibold text-primary hover:bg-neutral"
-                        >
-                           <Upload className="h-4 w-4" />
-                           Upload logo
-                        </label>
-                        <p className="mt-1 text-xs text-label">
-                           PNG or JPG up to 5MB
-                        </p>
-                     </div>
-                  </div>
-               </SectionCard>
-
-               <SectionCard title="About">
+               {/* About */}
+               <div className="rounded-2xl border border-outline bg-white/90 p-6 shadow-sm">
+                  <h2 className="text-base font-semibold text-primary mb-4">
+                     About the company
+                  </h2>
                   <TextArea
-                     label="Company summary"
+                     label=""
                      name="about"
                      value={formData.about}
                      onChange={handleChange}
-                     placeholder="Describe your organization and culture."
+                     placeholder="Describe your organization, culture, and mission."
                      rows={5}
                   />
-               </SectionCard>
+               </div>
 
+               {/* Submit */}
                <div className="flex flex-wrap items-center gap-3">
                   <button
                      type="submit"
                      disabled={isSaving}
-                     className="rounded-full bg-primary px-6 py-2 text-sm font-semibold text-white hover:bg-secondary"
+                     className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-2.5 text-sm font-semibold text-white hover:bg-secondary transition disabled:opacity-60"
                   >
-                     {isSaving ? "Saving..." : "Save changes"}
+                     {isSaving ? "Saving…" : "Save changes"}
                   </button>
+                  <Link
+                     to="/company-profile"
+                     className="rounded-full border border-outline bg-white px-6 py-2.5 text-sm font-semibold text-primary hover:bg-neutral transition"
+                  >
+                     Cancel
+                  </Link>
                   {statusMessage && (
-                     <span className="text-sm text-label">
+                     <div
+                        className={`flex items-center gap-2 rounded-xl px-3 py-2 text-sm ${statusType === "success" ? "bg-success/10 text-success" : "bg-error/10 text-error"}`}
+                     >
+                        {statusType === "success" && (
+                           <CheckCircle2 className="h-4 w-4" />
+                        )}
                         {statusMessage}
-                     </span>
+                     </div>
                   )}
                </div>
             </form>

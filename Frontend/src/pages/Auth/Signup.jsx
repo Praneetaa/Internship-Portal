@@ -4,12 +4,14 @@ import {
    Eye,
    EyeOff,
    User,
-   Building,
+   Building2,
    AlertCircle,
    Upload,
    Loader,
+   Briefcase,
+   CheckCircle2,
 } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import toast from "react-hot-toast";
 import axiosInstance from "../../utils/axiosInstances";
 import { API_PATHS } from "../../utils/apiPaths";
@@ -18,7 +20,6 @@ import { useAuth } from "../../context/AuthContext";
 
 const userRoles = { CANDIDATE: "candidate", ORGANIZATION: "organization" };
 
-//Helper function to avoid repeating form resets
 const getInitialFormData = (role) => ({
    fullName: "",
    companyName: "",
@@ -30,169 +31,133 @@ const getInitialFormData = (role) => ({
    avatar: null,
 });
 
+const Field = ({ label, id, error, children }) => (
+   <div className="space-y-1.5">
+      <label htmlFor={id} className="block text-sm font-semibold text-primary">
+         {label}
+      </label>
+      {children}
+      {error && (
+         <p className="flex items-center gap-1.5 text-xs text-error">
+            <AlertCircle className="h-3.5 w-3.5" />
+            {error}
+         </p>
+      )}
+   </div>
+);
+
+const inputCls = (hasError) =>
+   `w-full rounded-xl border py-3 px-4 text-sm text-paragraph outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/20 ${hasError ? "border-error bg-error/5" : "border-outline bg-white"}`;
+
 const Signup = () => {
    const { login } = useAuth();
    const navigate = useNavigate();
-
    const [formData, setFormData] = useState(
       getInitialFormData(userRoles.CANDIDATE),
    );
-
    const [formState, setFormState] = useState({
       loading: false,
       errors: {},
       showPassword: false,
       showConfirmPassword: false,
       avatarPreview: null,
-      success: false,
    });
 
    const handleInputChange = (e) => {
       const { name, value } = e.target;
-      setFormData((prev) => ({
-         ...prev,
-         [name]: value,
-      }));
-      if (formState.errors[name]) {
+      setFormData((prev) => ({ ...prev, [name]: value }));
+      if (formState.errors[name])
          setFormState((prev) => ({
             ...prev,
             errors: { ...prev.errors, [name]: undefined },
          }));
-      }
-
-      // Live validation only for password and confirmPassword
-      let errors = {};
-      if (name === "password") {
-         if (value && !/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/.test(value)) {
-            errors.password =
-               "Must be 8+ chars, include uppercase, lowercase, and number.";
-         }
-         if (formData.confirmPassword && value !== formData.confirmPassword) {
-            errors.confirmPassword = "Passwords do not match.";
-         } else if (
-            formData.confirmPassword &&
-            value === formData.confirmPassword
-         ) {
-            setFormState((prev) => ({
-               ...prev,
-               errors: { ...prev.errors, confirmPassword: undefined },
-            }));
-         }
+      if (
+         name === "password" &&
+         formData.confirmPassword &&
+         value !== formData.confirmPassword
+      ) {
          setFormState((prev) => ({
             ...prev,
-            errors: { ...prev.errors, ...errors },
+            errors: {
+               ...prev.errors,
+               confirmPassword: "Passwords do not match.",
+            },
          }));
-      }
-
-      if (name === "confirmPassword") {
-         const errors = {};
-         if (value && value !== formData.password) {
-            errors.confirmPassword = "Passwords do not match.";
-         }
+      } else if (name === "confirmPassword" && value !== formData.password) {
          setFormState((prev) => ({
             ...prev,
-            errors: { ...prev.errors, ...errors },
+            errors: {
+               ...prev.errors,
+               confirmPassword: "Passwords do not match.",
+            },
          }));
       }
    };
 
    const handleRoleChange = (role) => {
       setFormData(getInitialFormData(role));
-
       setFormState({
          loading: false,
          errors: {},
          showPassword: false,
          showConfirmPassword: false,
          avatarPreview: null,
-         success: false,
       });
    };
 
    const handleAvatarChange = (e) => {
       const file = e.target.files[0];
       if (!file) return;
-
       if (file.size > 5 * 1024 * 1024) {
-         setFormState((prev) => ({
-            ...prev,
-            errors: {
-               ...prev.errors,
-               avatar: "File size must be less than 5MB",
-            },
+         setFormState((p) => ({
+            ...p,
+            errors: { ...p.errors, avatar: "Max 5MB" },
          }));
          return;
       }
-
       if (!["image/jpeg", "image/jpg", "image/png"].includes(file.type)) {
-         setFormState((prev) => ({
-            ...prev,
-            errors: {
-               ...prev.errors,
-               avatar: "Only JPG and PNG files are allowed",
-            },
+         setFormState((p) => ({
+            ...p,
+            errors: { ...p.errors, avatar: "JPG or PNG only" },
          }));
          return;
       }
-
-      setFormState((prev) => ({
-         ...prev,
-         errors: { ...prev.errors, avatar: undefined },
-      }));
-
       setFormData((prev) => ({ ...prev, avatar: file }));
-
       const reader = new FileReader();
-      reader.onload = () => {
-         setFormState((prev) => ({ ...prev, avatarPreview: reader.result }));
-      };
+      reader.onload = () =>
+         setFormState((prev) => ({
+            ...prev,
+            avatarPreview: reader.result,
+            errors: { ...prev.errors, avatar: undefined },
+         }));
       reader.readAsDataURL(file);
    };
-   //Validation functions
+
    const validateForm = () => {
-      let errors = {};
-
-      // Candidate validation
+      const errors = {};
       if (formData.role === userRoles.CANDIDATE) {
-         if (!formData.fullName.trim()) {
+         if (!formData.fullName.trim())
             errors.fullName = "Full name is required.";
-         }
-         if (!formData.personalEmail.trim()) {
+         if (!formData.personalEmail.trim())
             errors.personalEmail = "Email is required.";
-         } else if (
-            !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.personalEmail)
-         ) {
-            errors.personalEmail = "Please enter a valid email address.";
-         }
+         else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.personalEmail))
+            errors.personalEmail = "Enter a valid email address.";
       }
-
-      // Organization validation
       if (formData.role === userRoles.ORGANIZATION) {
-         if (!formData.companyName.trim()) {
+         if (!formData.companyName.trim())
             errors.companyName = "Company name is required.";
-         }
-         if (!formData.companyEmail.trim()) {
+         if (!formData.companyEmail.trim())
             errors.companyEmail = "Company email is required.";
-         } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.companyEmail)) {
-            errors.companyEmail = "Please enter a valid email address.";
-         }
+         else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.companyEmail))
+            errors.companyEmail = "Enter a valid email.";
       }
-
-      if (!formData.password) {
-         errors.password = "Password is required.";
-      } else if (
-         !/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/.test(formData.password)
-      ) {
-         errors.password =
-            "Must be 8+ chars, include uppercase, lowercase, and number.";
-      }
-
-      if (!formData.confirmPassword) {
+      if (!formData.password) errors.password = "Password is required.";
+      else if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/.test(formData.password))
+         errors.password = "8+ chars, uppercase, lowercase, and number.";
+      if (!formData.confirmPassword)
          errors.confirmPassword = "Please confirm your password.";
-      } else if (formData.confirmPassword !== formData.password) {
+      else if (formData.confirmPassword !== formData.password)
          errors.confirmPassword = "Passwords do not match.";
-      }
-
       return errors;
    };
 
@@ -203,64 +168,40 @@ const Signup = () => {
          setFormState((prev) => ({ ...prev, errors }));
          return;
       }
-
       setFormState((prev) => ({ ...prev, loading: true }));
-
-      const isOrganization = formData.role === userRoles.ORGANIZATION;
-      const emailField = isOrganization ? "companyEmail" : "personalEmail";
-
+      const isOrg = formData.role === userRoles.ORGANIZATION;
       try {
          let avatarUrl = "";
-
-         //Upload image if present
          if (formData.avatar) {
-            const imgUploadRes = await uploadImage(formData.avatar);
-            avatarUrl = imgUploadRes.imageUrl || "";
+            const res = await uploadImage(formData.avatar);
+            avatarUrl = res.imageUrl || "";
          }
-
          const payload = {
-            name: isOrganization ? formData.companyName : formData.fullName,
-            email: isOrganization
-               ? formData.companyEmail
-               : formData.personalEmail,
+            name: isOrg ? formData.companyName : formData.fullName,
+            email: isOrg ? formData.companyEmail : formData.personalEmail,
             password: formData.password,
             role: formData.role,
-            avatar: avatarUrl || "",
+            avatar: avatarUrl,
+            ...(isOrg && { companyName: formData.companyName }),
          };
-         if (isOrganization) {
-            payload.companyName = formData.companyName;
-         }
-
          const response = await axiosInstance.post(
             API_PATHS.AUTH.REGISTER,
             payload,
          );
-
-         //Handle successful registration
-         setFormState((prev) => ({
-            ...prev,
-            loading: false,
-            success: true,
-            errors: {},
-         }));
-
          const { token } = response.data;
          if (token) {
             login(response.data, token);
             toast.success("Account created — welcome!");
-            navigate(
-               isOrganization ? "/organization-dashboard" : "/find-jobs",
-               { replace: true },
-            );
+            navigate(isOrg ? "/organization-dashboard" : "/find-jobs", {
+               replace: true,
+            });
          }
       } catch (error) {
          const message =
             error.response?.data?.message ||
             "Registration failed. Please try again.";
-
-         //Map "User already exists" → inline error on the email field
          const isEmailTaken = /already exists/i.test(message);
-
+         const emailField = isOrg ? "companyEmail" : "personalEmail";
          setFormState((prev) => ({
             ...prev,
             loading: false,
@@ -273,371 +214,369 @@ const Signup = () => {
          );
       }
    };
+
+   const isOrg = formData.role === userRoles.ORGANIZATION;
+
    return (
-      <div className="min-h-screen flex justify-center items-start sm:items-center bg-neutral py-10 sm:py-12 px-4">
-         <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="w-full flex justify-center"
-         >
-            <div className="w-full max-w-md bg-white p-6 sm:p-8 rounded-xl shadow-lg">
-               <h2 className="text-2xl sm:text-3xl font-bold text-center text-primary mb-2">
-                  Create Account
+      <div className="flex min-h-screen bg-neutral">
+         {/* Left panel */}
+         <div className="hidden lg:flex lg:w-[40%] flex-col justify-between bg-primary p-12 relative overflow-hidden">
+            <div className="absolute inset-0 opacity-10">
+               <div className="absolute top-20 left-10 w-64 h-64 rounded-full border-2 border-white" />
+               <div className="absolute bottom-20 right-10 w-96 h-96 rounded-full border border-white" />
+            </div>
+            <Link to="/" className="relative flex items-center gap-3">
+               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/20">
+                  <Briefcase className="h-5 w-5 text-white" />
+               </div>
+               <span className="text-xl font-bold text-white">Beaconn</span>
+            </Link>
+            <div className="relative space-y-5">
+               <h2 className="text-4xl font-bold text-white leading-tight">
+                  Start your journey today.
                </h2>
-               <p className="text-center text-paragraph mb-5">
-                  Join us and kickstart your journey
+               <p className="text-white/70 text-base">
+                  Build your profile once, apply to internships and events that
+                  match where you're headed.
                </p>
+               <div className="space-y-3 pt-2">
+                  {[
+                     "Free to join — no hidden fees",
+                     "Internship-focused listings only",
+                     "Track applications in one place",
+                     "Get discovered by top organizations",
+                  ].map((item) => (
+                     <div key={item} className="flex items-center gap-3">
+                        <CheckCircle2 className="h-5 w-5 text-white/60 flex-shrink-0" />
+                        <span className="text-sm text-white/80">{item}</span>
+                     </div>
+                  ))}
+               </div>
+            </div>
+            <p className="relative text-sm text-white/40">
+               © 2026 Beaconn. All rights reserved.
+            </p>
+         </div>
 
-               <form onSubmit={handleSignup} className="space-y-4">
-                  {/*Role Selection*/}
-                  <div className="mb-6">
-                     <label className="block text-base font-medium text-label mb-3">
-                        I am a:
-                     </label>
-                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        {/* Candidate Button */}
-                        <button
-                           type="button"
-                           className={`flex flex-col items-center p-4 sm:p-5 rounded-lg border border-label transition ${
-                              formData.role === userRoles.CANDIDATE
-                                 ? "border-primary bg-[#F7F7F8]"
-                                 : "border-outline"
-                           } focus:outline-none focus:ring-2 focus:ring-primary`}
-                           onClick={() => handleRoleChange(userRoles.CANDIDATE)}
-                        >
-                           <User size={28} className="mb-2 text-primary" />
-                           <span className="font-medium">Candidate</span>
-                           <span className="text-[0.85rem] text-gray-500">
-                              Looking for opportunities
-                           </span>
-                        </button>
-                        {/* Organization Button */}
-                        <button
-                           type="button"
-                           className={`flex flex-col items-center p-4 sm:p-5 rounded-lg border transition ${
-                              formData.role === userRoles.ORGANIZATION
-                                 ? "border-primary bg-[#F7F7F8]"
-                                 : "border-outline"
-                           } focus:outline-none focus:ring-2 focus:ring-primary`}
-                           onClick={() =>
-                              handleRoleChange(userRoles.ORGANIZATION)
-                           }
-                        >
-                           <Building size={28} className="mb-2 text-primary" />
-                           <span className="font-medium">Organizations</span>
-                           <span className="text-[0.85rem] text-gray-500">
-                              Looking for talents
-                           </span>
-                        </button>
+         {/* Right form */}
+         <div className="flex flex-1 flex-col items-center justify-center px-6 py-12 overflow-y-auto">
+            <motion.div
+               initial={{ opacity: 0, y: 24 }}
+               animate={{ opacity: 1, y: 0 }}
+               transition={{ duration: 0.5, ease: "easeOut" }}
+               className="w-full max-w-md"
+            >
+               <Link to="/" className="lg:hidden flex items-center gap-2 mb-8">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
+                     <Briefcase className="h-4 w-4 text-white" />
+                  </div>
+                  <span className="text-lg font-bold text-primary">
+                     Beaconn
+                  </span>
+               </Link>
+
+               <div className="mb-8">
+                  <h1 className="text-3xl font-bold text-primary">
+                     Create your account
+                  </h1>
+                  <p className="mt-2 text-sm text-label">
+                     Join and start your internship journey
+                  </p>
+               </div>
+
+               <form onSubmit={handleSignup} className="space-y-5">
+                  {/* Role selector */}
+                  <div className="space-y-2">
+                     <p className="text-sm font-semibold text-primary">
+                        I am a
+                     </p>
+                     <div className="grid grid-cols-2 gap-3">
+                        {[
+                           {
+                              role: userRoles.CANDIDATE,
+                              icon: User,
+                              label: "Candidate",
+                              sub: "Looking for opportunities",
+                           },
+                           {
+                              role: userRoles.ORGANIZATION,
+                              icon: Building2,
+                              label: "Organization",
+                              sub: "Looking for talent",
+                           },
+                        ].map(({ role, icon: Icon, label, sub }) => (
+                           <button
+                              key={role}
+                              type="button"
+                              onClick={() => handleRoleChange(role)}
+                              className={`flex flex-col items-center gap-1.5 rounded-xl border-2 p-4 text-center transition ${formData.role === role ? "border-primary bg-primary/5" : "border-outline bg-white hover:border-primary/40"}`}
+                           >
+                              <div
+                                 className={`flex h-10 w-10 items-center justify-center rounded-xl transition ${formData.role === role ? "bg-primary text-white" : "bg-neutral text-icon"}`}
+                              >
+                                 <Icon className="h-5 w-5" />
+                              </div>
+                              <span className="text-sm font-semibold text-primary">
+                                 {label}
+                              </span>
+                              <span className="text-xs text-label">{sub}</span>
+                           </button>
+                        ))}
                      </div>
                   </div>
 
-                  {formData.role === userRoles.CANDIDATE && (
-                     <>
-                        {/*Full Name*/}
-                        <div>
-                           <label
-                              className="block p-2 text-primary text-base font-medium"
-                              htmlFor="fullName"
-                           >
-                              Full Name
-                           </label>
-                           <div>
-                              <input
+                  <AnimatePresence mode="wait">
+                     <motion.div
+                        key={formData.role}
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -8 }}
+                        transition={{ duration: 0.2 }}
+                        className="space-y-5"
+                     >
+                        {!isOrg ? (
+                           <>
+                              <Field
+                                 label="Full name"
                                  id="fullName"
-                                 type="text"
-                                 name="fullName"
-                                 value={formData.fullName}
-                                 placeholder="Enter your first name"
-                                 onChange={handleInputChange}
-                                 className={`w-full p-2 pl-3 rounded-md border ${
-                                    formState.errors.fullName
-                                       ? "border-error"
-                                       : "border-outline"
-                                 } focus:outline-none focus:ring-2 focus:ring-accent`}
-                              />
-                              {formState.errors.fullName && (
-                                 <p className="text-error text-sm mt-1 flex items-center">
-                                    <AlertCircle className="w-4 h-4 mr-1" />
-                                    {formState.errors.fullName}
-                                 </p>
-                              )}
-                           </div>
-                        </div>
-
-                        {/*Email*/}
-                        <div>
-                           <label
-                              className="block p-2 text-primary text-base font-medium"
-                              htmlFor="personalEmail"
-                           >
-                              Email Address
-                           </label>
-                           <div>
-                              <input
+                                 error={formState.errors.fullName}
+                              >
+                                 <input
+                                    id="fullName"
+                                    type="text"
+                                    name="fullName"
+                                    value={formData.fullName}
+                                    onChange={handleInputChange}
+                                    placeholder="Alex Chen"
+                                    className={inputCls(
+                                       formState.errors.fullName,
+                                    )}
+                                 />
+                              </Field>
+                              <Field
+                                 label="Email address"
                                  id="personalEmail"
-                                 type="email"
-                                 name="personalEmail"
-                                 value={formData.personalEmail}
-                                 placeholder="Enter your email"
-                                 onChange={handleInputChange}
-                                 className={`w-full p-2 pl-3 rounded-md border ${
-                                    formState.errors.personalEmail
-                                       ? "border-error"
-                                       : "border-outline"
-                                 } focus:outline-none focus:ring-2 focus:ring-accent`}
-                              />
-                              {formState.errors.personalEmail && (
-                                 <p className="text-error text-sm mt-1 flex items-center">
-                                    <AlertCircle className="w-4 h-4 mr-1" />
-                                    {formState.errors.personalEmail}
-                                 </p>
-                              )}
-                           </div>
-                        </div>
-                     </>
-                  )}
-                  {formData.role === userRoles.ORGANIZATION && (
-                     <>
-                        {/*Company Name*/}
-                        <div>
-                           <label
-                              className="block p-2 text-primary text-base font-medium"
-                              htmlFor="companyName"
-                           >
-                              Company Name
-                           </label>
-                           <div>
-                              <input
+                                 error={formState.errors.personalEmail}
+                              >
+                                 <input
+                                    id="personalEmail"
+                                    type="email"
+                                    name="personalEmail"
+                                    value={formData.personalEmail}
+                                    onChange={handleInputChange}
+                                    placeholder="you@email.com"
+                                    className={inputCls(
+                                       formState.errors.personalEmail,
+                                    )}
+                                 />
+                              </Field>
+                           </>
+                        ) : (
+                           <>
+                              <Field
+                                 label="Company name"
                                  id="companyName"
-                                 type="text"
-                                 name="companyName"
-                                 value={formData.companyName}
-                                 placeholder="Enter your Company Name"
-                                 onChange={handleInputChange}
-                                 className={`w-full p-2 pl-3 rounded-md border ${
-                                    formState.errors.companyName
-                                       ? "border-error"
-                                       : "border-outline"
-                                 } focus:outline-none focus:ring-2 focus:ring-accent`}
-                              />
-                              {formState.errors.companyName && (
-                                 <p className="text-error text-sm mt-1 flex items-center">
-                                    <AlertCircle className="w-4 h-4 mr-1" />
-                                    {formState.errors.companyName}
-                                 </p>
-                              )}
-                           </div>
-                        </div>
-
-                        {/*Company Email*/}
-                        <div>
-                           <label
-                              className="block p-2 text-primary text-base font-medium"
-                              htmlFor="companyEmail"
-                           >
-                              Company Email
-                           </label>
-                           <div>
-                              <input
+                                 error={formState.errors.companyName}
+                              >
+                                 <input
+                                    id="companyName"
+                                    type="text"
+                                    name="companyName"
+                                    value={formData.companyName}
+                                    onChange={handleInputChange}
+                                    placeholder="Beaconn Studio"
+                                    className={inputCls(
+                                       formState.errors.companyName,
+                                    )}
+                                 />
+                              </Field>
+                              <Field
+                                 label="Company email"
                                  id="companyEmail"
-                                 type="email"
-                                 name="companyEmail"
-                                 value={formData.companyEmail}
-                                 placeholder="your@email.com"
-                                 onChange={handleInputChange}
-                                 className={`w-full p-2 pl-3 rounded-md border ${
-                                    formState.errors.companyEmail
-                                       ? "border-error"
-                                       : "border-outline"
-                                 } focus:outline-none focus:ring-2 focus:ring-accent`}
-                              />
-                              {formState.errors.companyEmail && (
-                                 <p className="text-error text-sm mt-1 flex items-center">
-                                    <AlertCircle className="w-4 h-4 mr-1" />
-                                    {formState.errors.companyEmail}
-                                 </p>
-                              )}
-                           </div>
-                        </div>
-                     </>
-                  )}
+                                 error={formState.errors.companyEmail}
+                              >
+                                 <input
+                                    id="companyEmail"
+                                    type="email"
+                                    name="companyEmail"
+                                    value={formData.companyEmail}
+                                    onChange={handleInputChange}
+                                    placeholder="hello@company.com"
+                                    className={inputCls(
+                                       formState.errors.companyEmail,
+                                    )}
+                                 />
+                              </Field>
+                           </>
+                        )}
 
-                  {/*Common Fields*/}
-
-                  {/*Password*/}
-                  <div>
-                     <label
-                        className="block p-2 text-primary text-base font-medium"
-                        htmlFor="password"
-                     >
-                        Password
-                     </label>
-                     <div className="relative">
-                        <input
+                        <Field
+                           label="Password"
                            id="password"
-                           type={formState.showPassword ? "text" : "password"}
-                           name="password"
-                           value={formData.password}
-                           placeholder="Enter your password"
-                           onChange={handleInputChange}
-                           className={`w-full p-2 pl-3 rounded-md border ${
-                              formState.errors.password
-                                 ? "border-error"
-                                 : "border-outline"
-                           } focus:outline-none focus:ring-2 focus:ring-accent`}
-                        />
-                        <button
-                           type="button"
-                           onClick={() =>
-                              setFormState((prev) => ({
-                                 ...prev,
-                                 showPassword: !prev.showPassword,
-                              }))
-                           }
-                           className="absolute right-3 top-1/2 -translate-y-1/2 transform text-gray-400 hover:text-gray-600"
+                           error={formState.errors.password}
                         >
-                           {formState.showPassword ? (
-                              <Eye className="w-5 h-5" />
-                           ) : (
-                              <EyeOff className="w-5 h-5" />
-                           )}
-                        </button>
-                     </div>
-                     {formState.errors.password && (
-                        <p className="text-error text-sm mt-1 flex items-center">
-                           <AlertCircle className="w-4 h-4 mr-1" />
-                           {formState.errors.password}
-                        </p>
-                     )}
-                  </div>
-                  {/*Confirm Password*/}
-                  <div>
-                     <label
-                        className="block p-2 text-primary text-base font-medium"
-                        htmlFor="confirmPassword"
-                     >
-                        Confirm Password
-                     </label>
-                     <div className="relative">
-                        <input
-                           id="confirmPassword"
-                           type={
-                              formState.showConfirmPassword
-                                 ? "text"
-                                 : "password"
-                           }
-                           name="confirmPassword"
-                           value={formData.confirmPassword}
-                           placeholder="Re-enter your password"
-                           onChange={handleInputChange}
-                           className={`w-full p-2 pl-3 rounded-md border ${
-                              formState.errors.confirmPassword
-                                 ? "border-error"
-                                 : "border-outline"
-                           } focus:outline-none focus:ring-2 focus:ring-accent`}
-                        />
-                        <button
-                           type="button"
-                           onClick={() =>
-                              setFormState((prev) => ({
-                                 ...prev,
-                                 showConfirmPassword: !prev.showConfirmPassword,
-                              }))
-                           }
-                           className="absolute right-3 top-1/2 -translate-y-1/2 transform text-gray-400 hover:text-gray-600"
-                        >
-                           {formState.showConfirmPassword ? (
-                              <Eye className="w-5 h-5" />
-                           ) : (
-                              <EyeOff className="w-5 h-5" />
-                           )}
-                        </button>
-                     </div>
-
-                     {formState.errors.confirmPassword && (
-                        <p className="text-error text-sm mt-1 flex items-center">
-                           <AlertCircle className="w-4 h-4 mr-1" />
-                           {formState.errors.confirmPassword}
-                        </p>
-                     )}
-                  </div>
-                  {/*Upload Profile Picture*/}
-                  <div>
-                     <label className="block p-2 text-primary text-base font-medium">
-                        Profile Picture (Optional)
-                     </label>
-
-                     <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-                        {/* Circle Preview */}
-                        <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden">
-                           {formState.avatarPreview ? (
-                              <img
-                                 src={formState.avatarPreview}
-                                 alt="Avatar preview"
-                                 className="w-full h-full object-cover"
+                           <div className="relative">
+                              <input
+                                 id="password"
+                                 name="password"
+                                 type={
+                                    formState.showPassword ? "text" : "password"
+                                 }
+                                 value={formData.password}
+                                 onChange={handleInputChange}
+                                 placeholder="8+ characters"
+                                 className={
+                                    inputCls(formState.errors.password) +
+                                    " pr-11"
+                                 }
                               />
-                           ) : (
-                              <User className="w-8 h-8 text-icon" />
+                              <button
+                                 type="button"
+                                 onClick={() =>
+                                    setFormState((p) => ({
+                                       ...p,
+                                       showPassword: !p.showPassword,
+                                    }))
+                                 }
+                                 className="absolute right-3.5 top-1/2 -translate-y-1/2 text-icon hover:text-primary transition"
+                              >
+                                 {formState.showPassword ? (
+                                    <Eye className="h-4 w-4" />
+                                 ) : (
+                                    <EyeOff className="h-4 w-4" />
+                                 )}
+                              </button>
+                           </div>
+                        </Field>
+
+                        <Field
+                           label="Confirm password"
+                           id="confirmPassword"
+                           error={formState.errors.confirmPassword}
+                        >
+                           <div className="relative">
+                              <input
+                                 id="confirmPassword"
+                                 name="confirmPassword"
+                                 type={
+                                    formState.showConfirmPassword
+                                       ? "text"
+                                       : "password"
+                                 }
+                                 value={formData.confirmPassword}
+                                 onChange={handleInputChange}
+                                 placeholder="Re-enter password"
+                                 className={
+                                    inputCls(formState.errors.confirmPassword) +
+                                    " pr-11"
+                                 }
+                              />
+                              <button
+                                 type="button"
+                                 onClick={() =>
+                                    setFormState((p) => ({
+                                       ...p,
+                                       showConfirmPassword:
+                                          !p.showConfirmPassword,
+                                    }))
+                                 }
+                                 className="absolute right-3.5 top-1/2 -translate-y-1/2 text-icon hover:text-primary transition"
+                              >
+                                 {formState.showConfirmPassword ? (
+                                    <Eye className="h-4 w-4" />
+                                 ) : (
+                                    <EyeOff className="h-4 w-4" />
+                                 )}
+                              </button>
+                           </div>
+                        </Field>
+
+                        {/* Avatar upload */}
+                        <div className="space-y-2">
+                           <p className="text-sm font-semibold text-primary">
+                              Profile photo{" "}
+                              <span className="font-normal text-label">
+                                 (optional)
+                              </span>
+                           </p>
+                           <div className="flex items-center gap-4">
+                              <div className="h-14 w-14 flex-shrink-0 overflow-hidden rounded-full bg-neutral border border-outline flex items-center justify-center">
+                                 {formState.avatarPreview ? (
+                                    <img
+                                       src={formState.avatarPreview}
+                                       alt="Preview"
+                                       className="h-full w-full object-cover"
+                                    />
+                                 ) : (
+                                    <User className="h-6 w-6 text-icon" />
+                                 )}
+                              </div>
+                              <div>
+                                 <input
+                                    id="avatar"
+                                    type="file"
+                                    name="avatar"
+                                    accept=".png,.jpg,.jpeg"
+                                    onChange={handleAvatarChange}
+                                    className="hidden"
+                                 />
+                                 <label
+                                    htmlFor="avatar"
+                                    className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-outline bg-white px-4 py-2 text-sm font-semibold text-primary hover:bg-neutral transition"
+                                 >
+                                    <Upload className="h-4 w-4" /> Upload photo
+                                 </label>
+                                 <p className="mt-1 text-xs text-label">
+                                    JPG, PNG · Max 5MB
+                                 </p>
+                              </div>
+                           </div>
+                           {formState.errors.avatar && (
+                              <p className="flex items-center gap-1.5 text-xs text-error">
+                                 <AlertCircle className="h-3.5 w-3.5" />
+                                 {formState.errors.avatar}
+                              </p>
                            )}
                         </div>
+                     </motion.div>
+                  </AnimatePresence>
 
-                        {/* Upload Section */}
-                        <div className="flex-1">
-                           <input
-                              id="avatar"
-                              type="file"
-                              name="avatar"
-                              accept=".png, .jpg, .jpeg"
-                              onChange={handleAvatarChange}
-                              className="hidden"
-                           />
-
-                           <label
-                              htmlFor="avatar"
-                              className="cursor-pointer bg-gray-50 border border-outline rounded-lg px-4 py-2 text-sm font-medium text-paragraph hover:bg-gray-100 transition-colors inline-flex items-center gap-2"
-                           >
-                              <Upload className="w-4 h-4" />
-                              <span>Upload Photo</span>
-                           </label>
-                           <p className="text-xs text-gray-500 mt-1">
-                              JPG, PNG, up to 5MB
-                           </p>
-                        </div>
-                     </div>
-                     {formState.errors.avatar && (
-                        <p className="text-error text-sm mt-1 flex item-center">
-                           <AlertCircle className="w-4 h-4 mr-1" />
-                           {formState.errors.avatar}
+                  {formState.errors.submit && (
+                     <div className="flex items-center gap-2.5 rounded-xl border border-error/30 bg-error/5 p-3.5">
+                        <AlertCircle className="h-4 w-4 flex-shrink-0 text-error" />
+                        <p className="text-sm text-error">
+                           {formState.errors.submit}
                         </p>
-                     )}
-                  </div>
+                     </div>
+                  )}
 
                   <button
                      type="submit"
                      disabled={formState.loading}
-                     className="w-full text-white font-semibold py-3 mt-6 rounded-md cursor-pointer bg-gradient-to-r from-primary to-secondary hover:bg-gradient-to-l hover:from-secondary hover:to-primary transition-all duration-300"
+                     className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3 text-sm font-semibold text-white transition hover:bg-secondary disabled:opacity-60"
                   >
                      {formState.loading ? (
-                        <div className="flex items-center justify-center space-x-2">
-                           <Loader className="w-5 h-5 animate-spin" />
-                           <span>Signing Up...</span>
-                        </div>
+                        <>
+                           <Loader className="h-4 w-4 animate-spin" /> Creating
+                           account…
+                        </>
                      ) : (
-                        <span>Sign up</span>
+                        "Create account"
                      )}
                   </button>
                </form>
 
-               <p className="text-center text-label mt-4">
+               <p className="mt-6 text-center text-sm text-label">
                   Already have an account?{" "}
-                  <Link to="/Login" className="text-accent hover:underline">
-                     Log in
+                  <Link
+                     to="/Login"
+                     className="font-semibold text-primary hover:text-secondary transition"
+                  >
+                     Sign in
                   </Link>
                </p>
-            </div>
-         </motion.div>
+            </motion.div>
+         </div>
       </div>
    );
 };
