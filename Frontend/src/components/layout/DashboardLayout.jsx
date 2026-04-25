@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Briefcase, Building2, LogOut, Menu, X } from "lucide-react";
+import { Briefcase, LogOut, Menu, X } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { NAVIGATION_MENU } from "../../utils/data";
@@ -20,149 +20,140 @@ const DashboardLayout = ({
    const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
    const [isMobile, setIsMobile] = useState(false);
 
-   //Handle responsive behavior
    useEffect(() => {
       const handleResize = () => {
          const mobile = window.innerWidth < 768;
          setIsMobile(mobile);
-         if (!mobile) {
-            setSidebarOpen(false);
-         }
+         if (!mobile) setSidebarOpen(false);
       };
       handleResize();
       window.addEventListener("resize", handleResize);
-
-      return () => {
-         window.removeEventListener("resize", handleResize);
-      };
+      return () => window.removeEventListener("resize", handleResize);
    }, []);
 
-   //Close dropdowns when clicking outside
    useEffect(() => {
       const handleClickOutside = () => {
-         if (profileDropdownOpen) {
-            setProfileDropdownOpen(false);
-         }
+         if (profileDropdownOpen) setProfileDropdownOpen(false);
       };
       document.addEventListener("click", handleClickOutside);
       return () => document.removeEventListener("click", handleClickOutside);
    }, [profileDropdownOpen]);
+
    const handleNavigation = (itemId) => {
       setActiveNavItem(itemId);
       navigate(`/${itemId}`);
-      if (isMobile) {
-         setSidebarOpen(false);
-      }
+      if (isMobile) setSidebarOpen(false);
    };
 
-   const toggleSidebar = () => {
-      setSidebarOpen(!sidebarOpen);
-   };
-
-   const sidebarCollapsed = !isMobile && false;
+   const toggleSidebar = () => setSidebarOpen((prev) => !prev);
 
    return (
-      <div className="flex min-h-screen bg-neutral text-paragraph">
+      <div className="flex min-h-screen bg-background text-text">
+         {/* Mobile overlay */}
          {isMobile && sidebarOpen && (
             <div
-               className="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm"
+               className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm"
                onClick={toggleSidebar}
                aria-hidden="true"
             />
          )}
-         {/*Sidebar*/}
-         <div
-            className={`fixed inset-y-0 left-0 z-50 transition-transform duration-300 transform ${
+
+         {/* Sidebar */}
+         <aside
+            className={`fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-outline/60 bg-white transition-transform duration-300 ${
                isMobile
                   ? sidebarOpen
-                     ? "translate-x-0"
+                     ? "translate-x-0 shadow-2xl"
                      : "-translate-x-full"
                   : "translate-x-0"
-            } ${sidebarCollapsed ? "w-16" : "w-64"} bg-white border-r border-outline`}
+            }`}
          >
-            {/*Company Logo*/}
-            <div className="flex items-center justify-between h-16 border-b border-outline bg-white/70 px-6">
-               {!sidebarCollapsed ? (
-                  <Link
-                     className="flex items-center space-x-3"
-                     to="/organization-dashboard"
-                  >
-                     <div className="h-8 w-8 bg-gradient-to-br from-primary to-secondary rounded-lg flex items-center justify-center">
-                        <Briefcase className="h-5 w-5 text-white" />
-                     </div>
-                     <span className="text-primary font-bold text-xl">
-                        Beaconn
-                     </span>
-                  </Link>
-               ) : (
-                  <div className="h-8 w-8 bg-gradient-to-br from-primary to-secondary rounded-xl flex items-center justify-center">
-                     <Building2 className="h-5 w-5 text-white" />
+            {/* Brand header */}
+            <div className="flex h-16 items-center justify-between border-b border-outline/60 bg-gradient-to-r from-primary/5 to-secondary/5 px-5">
+               <Link
+                  className="flex items-center gap-3"
+                  to="/organization-dashboard"
+               >
+                  <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-secondary shadow-sm">
+                     <Briefcase className="h-4 w-4 text-white" />
                   </div>
-               )}
+                  <span className="text-lg font-bold text-primary">
+                     Beaconn
+                  </span>
+               </Link>
                {isMobile && (
                   <button
                      type="button"
                      onClick={toggleSidebar}
-                     className="rounded-lg p-2 text-label hover:bg-neutral"
+                     className="cursor-pointer rounded-lg p-1.5 text-label transition hover:bg-neutral"
                      aria-label="Close sidebar"
                   >
-                     <X className="h-5 w-5" />
+                     <X className="h-4 w-4" />
                   </button>
                )}
             </div>
-            {/*Navigation*/}
-            <nav className="mt-6 space-y-1 px-3">
-               {navItems.map((item) => {
-                  const Icon = item.icon;
-                  const isActive = activeNavItem === item.id;
-                  return (
-                     <button
-                        key={item.id}
-                        type="button"
-                        onClick={() => handleNavigation(item.id)}
-                        className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition ${
-                           isActive
-                              ? "bg-primary/10 text-primary shadow-sm"
-                              : "text-label hover:bg-neutral hover:text-primary"
-                        }`}
-                     >
-                        <Icon className="h-5 w-5" />
-                        {!sidebarCollapsed && <span>{item.name}</span>}
-                     </button>
-                  );
-               })}
+
+            {/* Nav items */}
+            <nav className="flex-1 overflow-y-auto px-3 py-4">
+               <p className="mb-2 px-3 text-[10px] font-bold uppercase tracking-widest text-muted">
+                  Menu
+               </p>
+               <div className="space-y-0.5">
+                  {navItems.map((item) => {
+                     const Icon = item.icon;
+                     const isActive = activeNavItem === item.id;
+                     return (
+                        <button
+                           key={item.id}
+                           type="button"
+                           onClick={() => handleNavigation(item.id)}
+                           className={`group relative flex w-full cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-150 ${
+                              isActive
+                                 ? "bg-primary/10 text-primary"
+                                 : "text-label hover:bg-neutral hover:text-text"
+                           }`}
+                        >
+                           {isActive && (
+                              <span className="absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-full bg-primary" />
+                           )}
+                           <Icon
+                              className={`h-4 w-4 flex-shrink-0 transition-colors ${isActive ? "text-primary" : "text-icon group-hover:text-text"}`}
+                           />
+                           <span>{item.name}</span>
+                        </button>
+                     );
+                  })}
+               </div>
             </nav>
 
-            {/*Logout*/}
-            <div className="absolute bottom-4 left-4 right-4">
+            {/* Logout */}
+            <div className="border-t border-outline/60 p-3">
                <button
-                  className="w-full flex items-center px-3 py-2.5 text-sm font-medium rounded-lg text-label hover:bg-neutral hover:text-primary transition-all duration-200"
+                  type="button"
                   onClick={logout}
+                  className="flex w-full cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-label transition hover:bg-red-50 hover:text-error"
                >
-                  <LogOut className="h-5 w-5 flex-shrink-0 text-icon" />
-                  {!sidebarCollapsed && <span className="ml-3">Logout</span>}
+                  <LogOut className="h-4 w-4 flex-shrink-0" />
+                  <span>Logout</span>
                </button>
             </div>
-         </div>
+         </aside>
 
-         <div className="flex-1 ml-0 md:ml-64">
-            {isMobile && (
-               <div className="flex items-center justify-between border-b border-outline bg-white px-4 py-3">
+         {/* Main area */}
+         <div className="flex flex-1 flex-col md:ml-64">
+            {/* Top bar */}
+            <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-outline/60 bg-white/95 px-4 backdrop-blur-md sm:px-6">
+               {isMobile && (
                   <button
                      type="button"
                      onClick={toggleSidebar}
-                     className="rounded-lg p-2 text-label hover:bg-neutral"
+                     className="cursor-pointer rounded-xl p-2 text-label transition hover:bg-neutral"
                      aria-label="Open sidebar"
                   >
                      <Menu className="h-5 w-5" />
                   </button>
-                  <span className="text-sm font-semibold text-primary">
-                     Dashboard
-                  </span>
-               </div>
-            )}
-            {/* Profile dropdown */}
-            <header className="relative z-50 flex items-center justify-end border-b border-outline bg-white px-6 py-4">
+               )}
+               <div className="flex-1" />
                <ProfileDropdown
                   user={user}
                   isOpen={profileDropdownOpen}
@@ -170,14 +161,14 @@ const DashboardLayout = ({
                      e.stopPropagation();
                      setProfileDropdownOpen((prev) => !prev);
                   }}
-                  avatar={user?.avatar || ""}
-                  companyName={user?.name || ""}
-                  companyEmail={user?.companyEmail || ""}
                   onLogout={logout}
                />
             </header>
-            {/*Main content area*/}
-            <main className="flex-1 overflow-auto p-6">{children}</main>
+
+            {/* Page content */}
+            <main className="flex-1 overflow-auto p-5 sm:p-6 lg:p-8">
+               {children}
+            </main>
          </div>
       </div>
    );

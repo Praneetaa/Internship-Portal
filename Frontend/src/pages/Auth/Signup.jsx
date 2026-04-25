@@ -8,8 +8,8 @@ import {
    AlertCircle,
    Upload,
    Loader,
-   Briefcase,
    CheckCircle2,
+   ArrowRight,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import toast from "react-hot-toast";
@@ -31,15 +31,25 @@ const getInitialFormData = (role) => ({
    avatar: null,
 });
 
+const panelItems = [
+   "Free to join — no hidden fees",
+   "Internship-focused listings only",
+   "Track applications in one place",
+   "Get discovered by top organizations",
+];
+
 const Field = ({ label, id, error, children }) => (
-   <div className="space-y-1.5">
-      <label htmlFor={id} className="block text-sm font-semibold text-primary">
+   <div className="flex flex-col gap-1.5">
+      <label
+         htmlFor={id}
+         className="text-xs font-semibold uppercase tracking-wide text-label"
+      >
          {label}
       </label>
       {children}
       {error && (
-         <p className="flex items-center gap-1.5 text-xs text-error">
-            <AlertCircle className="h-3.5 w-3.5" />
+         <p className="flex items-center gap-1.5 text-xs font-medium text-error">
+            <AlertCircle className="h-3.5 w-3.5 flex-shrink-0" />
             {error}
          </p>
       )}
@@ -47,7 +57,7 @@ const Field = ({ label, id, error, children }) => (
 );
 
 const inputCls = (hasError) =>
-   `w-full rounded-xl border py-3 px-4 text-sm text-paragraph outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/20 ${hasError ? "border-error bg-error/5" : "border-outline bg-white"}`;
+   `w-full rounded-xl border bg-white px-4 py-2.5 text-sm text-paragraph outline-none transition-all placeholder:text-icon focus:border-accent focus:ring-2 focus:ring-accent/20 ${hasError ? "border-error/60 focus:border-error focus:ring-error/20" : "border-outline hover:border-muted"}`;
 
 const Signup = () => {
    const { login } = useAuth();
@@ -140,7 +150,9 @@ const Signup = () => {
             errors.fullName = "Full name is required.";
          if (!formData.personalEmail.trim())
             errors.personalEmail = "Email is required.";
-         else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.personalEmail))
+         else if (
+            !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.personalEmail)
+         )
             errors.personalEmail = "Enter a valid email address.";
       }
       if (formData.role === userRoles.ORGANIZATION) {
@@ -148,11 +160,15 @@ const Signup = () => {
             errors.companyName = "Company name is required.";
          if (!formData.companyEmail.trim())
             errors.companyEmail = "Company email is required.";
-         else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.companyEmail))
+         else if (
+            !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.companyEmail)
+         )
             errors.companyEmail = "Enter a valid email.";
       }
       if (!formData.password) errors.password = "Password is required.";
-      else if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/.test(formData.password))
+      else if (
+         !/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/.test(formData.password)
+      )
          errors.password = "8+ chars, uppercase, lowercase, and number.";
       if (!formData.confirmPassword)
          errors.confirmPassword = "Please confirm your password.";
@@ -218,65 +234,69 @@ const Signup = () => {
    const isOrg = formData.role === userRoles.ORGANIZATION;
 
    return (
-      <div className="flex min-h-screen bg-neutral">
-         {/* Left panel */}
-         <div className="hidden lg:flex lg:w-[40%] flex-col justify-between bg-primary p-12 relative overflow-hidden">
-            <div className="absolute inset-0 opacity-10">
-               <div className="absolute top-20 left-10 w-64 h-64 rounded-full border-2 border-white" />
-               <div className="absolute bottom-20 right-10 w-96 h-96 rounded-full border border-white" />
+      <div className="flex min-h-screen bg-background">
+         {/* Left branding panel */}
+         <div className="relative hidden overflow-hidden lg:flex lg:w-[40%] lg:flex-col lg:justify-between bg-gradient-to-br from-primary via-primary to-[#1a246b] p-12">
+            <div className="pointer-events-none absolute inset-0">
+               <div className="absolute -right-16 -top-16 h-64 w-64 rounded-full border border-white/10" />
+               <div className="absolute bottom-24 left-8 h-52 w-52 rounded-full border border-white/8" />
+               <div className="absolute left-1/2 top-1/2 h-96 w-96 -translate-x-1/2 -translate-y-1/2 rounded-full bg-secondary/10 blur-3xl" />
             </div>
+
             <Link to="/" className="relative flex items-center gap-3">
-               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/20">
-                  <Briefcase className="h-5 w-5 text-white" />
-               </div>
+               <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/15 text-sm font-bold text-white">
+                  B
+               </span>
                <span className="text-xl font-bold text-white">Beaconn</span>
             </Link>
+
             <div className="relative space-y-5">
-               <h2 className="text-4xl font-bold text-white leading-tight">
-                  Start your journey today.
+               <h2 className="text-4xl font-bold leading-tight text-white">
+                  Start your journey
+                  <br />
+                  today.
                </h2>
-               <p className="text-white/70 text-base">
+               <p className="max-w-xs text-base leading-relaxed text-white/65">
                   Build your profile once, apply to internships and events that
                   match where you're headed.
                </p>
                <div className="space-y-3 pt-2">
-                  {[
-                     "Free to join — no hidden fees",
-                     "Internship-focused listings only",
-                     "Track applications in one place",
-                     "Get discovered by top organizations",
-                  ].map((item) => (
+                  {panelItems.map((item) => (
                      <div key={item} className="flex items-center gap-3">
-                        <CheckCircle2 className="h-5 w-5 text-white/60 flex-shrink-0" />
-                        <span className="text-sm text-white/80">{item}</span>
+                        <CheckCircle2 className="h-4.5 w-4.5 flex-shrink-0 text-success/80" />
+                        <span className="text-sm text-white/75">{item}</span>
                      </div>
                   ))}
                </div>
             </div>
-            <p className="relative text-sm text-white/40">
+
+            <p className="relative text-xs text-white/35">
                © 2026 Beaconn. All rights reserved.
             </p>
          </div>
 
-         {/* Right form */}
-         <div className="flex flex-1 flex-col items-center justify-center px-6 py-12 overflow-y-auto">
+         {/* Right form panel */}
+         <div className="flex flex-1 flex-col items-center justify-center overflow-y-auto px-6 py-12">
             <motion.div
-               initial={{ opacity: 0, y: 24 }}
+               initial={{ opacity: 0, y: 20 }}
                animate={{ opacity: 1, y: 0 }}
-               transition={{ duration: 0.5, ease: "easeOut" }}
+               transition={{ duration: 0.45, ease: "easeOut" }}
                className="w-full max-w-md"
             >
-               <Link to="/" className="lg:hidden flex items-center gap-2 mb-8">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-                     <Briefcase className="h-4 w-4 text-white" />
-                  </div>
+               <Link
+                  to="/"
+                  className="mb-8 flex items-center gap-2.5 lg:hidden"
+               >
+                  <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-secondary text-sm font-bold text-white">
+                     B
+                  </span>
                   <span className="text-lg font-bold text-primary">
                      Beaconn
                   </span>
                </Link>
 
-               <div className="mb-8">
-                  <h1 className="text-3xl font-bold text-primary">
+               <div className="mb-7">
+                  <h1 className="text-3xl font-bold text-text">
                      Create your account
                   </h1>
                   <p className="mt-2 text-sm text-label">
@@ -286,8 +306,8 @@ const Signup = () => {
 
                <form onSubmit={handleSignup} className="space-y-5">
                   {/* Role selector */}
-                  <div className="space-y-2">
-                     <p className="text-sm font-semibold text-primary">
+                  <div className="flex flex-col gap-2">
+                     <p className="text-xs font-semibold uppercase tracking-wide text-label">
                         I am a
                      </p>
                      <div className="grid grid-cols-2 gap-3">
@@ -309,17 +329,17 @@ const Signup = () => {
                               key={role}
                               type="button"
                               onClick={() => handleRoleChange(role)}
-                              className={`flex flex-col items-center gap-1.5 rounded-xl border-2 p-4 text-center transition ${formData.role === role ? "border-primary bg-primary/5" : "border-outline bg-white hover:border-primary/40"}`}
+                              className={`flex cursor-pointer flex-col items-center gap-2 rounded-2xl border-2 p-4 text-center transition-all ${formData.role === role ? "border-primary bg-primary/5 shadow-sm" : "border-outline bg-white hover:border-primary/40"}`}
                            >
-                              <div
-                                 className={`flex h-10 w-10 items-center justify-center rounded-xl transition ${formData.role === role ? "bg-primary text-white" : "bg-neutral text-icon"}`}
+                              <span
+                                 className={`flex h-10 w-10 items-center justify-center rounded-xl transition-colors ${formData.role === role ? "bg-primary text-white" : "bg-neutral text-icon"}`}
                               >
                                  <Icon className="h-5 w-5" />
-                              </div>
-                              <span className="text-sm font-semibold text-primary">
+                              </span>
+                              <span className="text-sm font-bold text-text">
                                  {label}
                               </span>
-                              <span className="text-xs text-label">{sub}</span>
+                              <span className="text-xs text-muted">{sub}</span>
                            </button>
                         ))}
                      </div>
@@ -425,10 +445,7 @@ const Signup = () => {
                                  value={formData.password}
                                  onChange={handleInputChange}
                                  placeholder="8+ characters"
-                                 className={
-                                    inputCls(formState.errors.password) +
-                                    " pr-11"
-                                 }
+                                 className={`${inputCls(formState.errors.password)} pr-11`}
                               />
                               <button
                                  type="button"
@@ -438,7 +455,7 @@ const Signup = () => {
                                        showPassword: !p.showPassword,
                                     }))
                                  }
-                                 className="absolute right-3.5 top-1/2 -translate-y-1/2 text-icon hover:text-primary transition"
+                                 className="absolute right-3.5 top-1/2 -translate-y-1/2 cursor-pointer text-icon transition hover:text-primary"
                               >
                                  {formState.showPassword ? (
                                     <Eye className="h-4 w-4" />
@@ -466,10 +483,7 @@ const Signup = () => {
                                  value={formData.confirmPassword}
                                  onChange={handleInputChange}
                                  placeholder="Re-enter password"
-                                 className={
-                                    inputCls(formState.errors.confirmPassword) +
-                                    " pr-11"
-                                 }
+                                 className={`${inputCls(formState.errors.confirmPassword)} pr-11`}
                               />
                               <button
                                  type="button"
@@ -480,7 +494,7 @@ const Signup = () => {
                                           !p.showConfirmPassword,
                                     }))
                                  }
-                                 className="absolute right-3.5 top-1/2 -translate-y-1/2 text-icon hover:text-primary transition"
+                                 className="absolute right-3.5 top-1/2 -translate-y-1/2 cursor-pointer text-icon transition hover:text-primary"
                               >
                                  {formState.showConfirmPassword ? (
                                     <Eye className="h-4 w-4" />
@@ -492,15 +506,15 @@ const Signup = () => {
                         </Field>
 
                         {/* Avatar upload */}
-                        <div className="space-y-2">
-                           <p className="text-sm font-semibold text-primary">
+                        <div className="flex flex-col gap-2">
+                           <p className="text-xs font-semibold uppercase tracking-wide text-label">
                               Profile photo{" "}
-                              <span className="font-normal text-label">
+                              <span className="normal-case font-normal text-muted">
                                  (optional)
                               </span>
                            </p>
                            <div className="flex items-center gap-4">
-                              <div className="h-14 w-14 flex-shrink-0 overflow-hidden rounded-full bg-neutral border border-outline flex items-center justify-center">
+                              <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center overflow-hidden rounded-full border border-outline bg-neutral">
                                  {formState.avatarPreview ? (
                                     <img
                                        src={formState.avatarPreview}
@@ -522,18 +536,19 @@ const Signup = () => {
                                  />
                                  <label
                                     htmlFor="avatar"
-                                    className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-outline bg-white px-4 py-2 text-sm font-semibold text-primary hover:bg-neutral transition"
+                                    className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-outline bg-white px-4 py-2 text-sm font-semibold text-primary transition hover:bg-neutral"
                                  >
-                                    <Upload className="h-4 w-4" /> Upload photo
+                                    <Upload className="h-4 w-4" />
+                                    Upload photo
                                  </label>
-                                 <p className="mt-1 text-xs text-label">
+                                 <p className="mt-1 text-xs text-muted">
                                     JPG, PNG · Max 5MB
                                  </p>
                               </div>
                            </div>
                            {formState.errors.avatar && (
-                              <p className="flex items-center gap-1.5 text-xs text-error">
-                                 <AlertCircle className="h-3.5 w-3.5" />
+                              <p className="flex items-center gap-1.5 text-xs font-medium text-error">
+                                 <AlertCircle className="h-3.5 w-3.5 flex-shrink-0" />
                                  {formState.errors.avatar}
                               </p>
                            )}
@@ -542,7 +557,7 @@ const Signup = () => {
                   </AnimatePresence>
 
                   {formState.errors.submit && (
-                     <div className="flex items-center gap-2.5 rounded-xl border border-error/30 bg-error/5 p-3.5">
+                     <div className="flex items-center gap-2.5 rounded-xl border border-error/25 bg-error/5 px-4 py-3">
                         <AlertCircle className="h-4 w-4 flex-shrink-0 text-error" />
                         <p className="text-sm text-error">
                            {formState.errors.submit}
@@ -553,15 +568,18 @@ const Signup = () => {
                   <button
                      type="submit"
                      disabled={formState.loading}
-                     className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3 text-sm font-semibold text-white transition hover:bg-secondary disabled:opacity-60"
+                     className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-primary py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-secondary hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60"
                   >
                      {formState.loading ? (
                         <>
-                           <Loader className="h-4 w-4 animate-spin" /> Creating
-                           account…
+                           <Loader className="h-4 w-4 animate-spin" />
+                           Creating account…
                         </>
                      ) : (
-                        "Create account"
+                        <>
+                           Create account
+                           <ArrowRight className="h-4 w-4" />
+                        </>
                      )}
                   </button>
                </form>
@@ -570,7 +588,7 @@ const Signup = () => {
                   Already have an account?{" "}
                   <Link
                      to="/Login"
-                     className="font-semibold text-primary hover:text-secondary transition"
+                     className="font-semibold text-primary transition hover:text-secondary"
                   >
                      Sign in
                   </Link>

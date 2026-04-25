@@ -5,6 +5,7 @@ import {
    useMemo,
    useState,
 } from "react";
+import { CheckCircle2, XCircle, Info, X } from "lucide-react";
 
 const ToastContext = createContext(null);
 
@@ -16,6 +17,24 @@ export const useToast = () => {
    return context;
 };
 
+const TOAST_STYLES = {
+   success: {
+      wrapper: "border-success/30 bg-white",
+      icon: "bg-success/10 text-success",
+      IconComponent: CheckCircle2,
+   },
+   error: {
+      wrapper: "border-error/30 bg-white",
+      icon: "bg-error/10 text-error",
+      IconComponent: XCircle,
+   },
+   info: {
+      wrapper: "border-accent/30 bg-white",
+      icon: "bg-accent/10 text-accent",
+      IconComponent: Info,
+   },
+};
+
 export const ToastProvider = ({ children }) => {
    const [toasts, setToasts] = useState([]);
 
@@ -23,12 +42,12 @@ export const ToastProvider = ({ children }) => {
       const id = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
       setToasts((prev) => [...prev, { id, message, variant }]);
       window.setTimeout(() => {
-         setToasts((prev) => prev.filter((toast) => toast.id !== id));
+         setToasts((prev) => prev.filter((t) => t.id !== id));
       }, 4200);
    }, []);
 
    const removeToast = useCallback((id) => {
-      setToasts((prev) => prev.filter((toast) => toast.id !== id));
+      setToasts((prev) => prev.filter((t) => t.id !== id));
    }, []);
 
    const value = useMemo(() => ({ toast: pushToast }), [pushToast]);
@@ -36,30 +55,39 @@ export const ToastProvider = ({ children }) => {
    return (
       <ToastContext.Provider value={value}>
          {children}
-         <div className="fixed right-4 top-4 z-50 flex max-w-sm flex-col gap-3">
-            {toasts.map((item) => (
-               <div
-                  key={item.id}
-                  className={`rounded-2xl border px-4 py-3 shadow-lg shadow-slate-900/10 transition-all duration-300 ${
-                     item.variant === "success"
-                        ? "border-emerald-200 bg-emerald-50 text-emerald-800"
-                        : item.variant === "error"
-                          ? "border-rose-200 bg-rose-50 text-rose-800"
-                          : "border-slate-200 bg-white text-slate-900"
-                  }`}
-               >
-                  <div className="flex items-center justify-between gap-3">
-                     <p className="text-sm font-semibold">{item.message}</p>
+         <div
+            aria-live="polite"
+            className="fixed right-4 top-4 z-[100] flex max-w-sm flex-col gap-2.5"
+         >
+            {toasts.map((item) => {
+               const styles =
+                  TOAST_STYLES[item.variant] || TOAST_STYLES.info;
+               const { IconComponent } = styles;
+               return (
+                  <div
+                     key={item.id}
+                     role="alert"
+                     className={`flex items-start gap-3 rounded-2xl border px-4 py-3.5 shadow-lg shadow-slate-900/8 ${styles.wrapper}`}
+                  >
+                     <span
+                        className={`mt-0.5 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-lg ${styles.icon}`}
+                     >
+                        <IconComponent className="h-3.5 w-3.5" />
+                     </span>
+                     <p className="flex-1 text-sm font-medium text-text">
+                        {item.message}
+                     </p>
                      <button
                         type="button"
-                        className="text-xs font-semibold opacity-70 transition hover:opacity-100"
                         onClick={() => removeToast(item.id)}
+                        className="mt-0.5 flex-shrink-0 cursor-pointer rounded-md p-0.5 text-muted transition hover:text-text"
+                        aria-label="Dismiss"
                      >
-                        Close
+                        <X className="h-3.5 w-3.5" />
                      </button>
                   </div>
-               </div>
-            ))}
+               );
+            })}
          </div>
       </ToastContext.Provider>
    );

@@ -145,31 +145,34 @@ const EmployerDashboard = () => {
             {/* Page header */}
             <div className="flex flex-wrap items-start justify-between gap-4">
                <div>
-                  <h1 className="text-2xl font-semibold text-primary">
+                  <p className="text-[11px] font-bold uppercase tracking-widest text-muted">
+                     Dashboard
+                  </p>
+                  <h1 className="mt-1 text-2xl font-bold text-text">
                      Employer dashboard
                   </h1>
                   <p className="mt-1 text-sm text-label">
                      Track internships, events, and applicants all in one place.
                   </p>
                </div>
-               <div className="flex flex-wrap gap-3">
+               <div className="flex flex-wrap gap-2">
                   <Link
                      to="/post-job"
-                     className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-secondary"
+                     className="inline-flex cursor-pointer items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-secondary hover:shadow-md"
                   >
                      <Briefcase className="h-4 w-4" />
                      Post internship
                   </Link>
                   <Link
                      to="/post-event"
-                     className="inline-flex items-center gap-2 rounded-full border border-primary bg-white px-4 py-2 text-sm font-semibold text-primary hover:bg-primary/5"
+                     className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-primary/30 bg-white px-4 py-2 text-sm font-semibold text-primary transition hover:bg-primary/5"
                   >
                      <CalendarDays className="h-4 w-4" />
                      Post event
                   </Link>
                   <Link
                      to="/applications"
-                     className="inline-flex items-center gap-2 rounded-full border border-outline bg-white px-4 py-2 text-sm font-semibold text-primary hover:bg-neutral"
+                     className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-outline bg-white px-4 py-2 text-sm font-semibold text-primary transition hover:bg-neutral"
                   >
                      Manage applicants
                   </Link>
@@ -178,14 +181,17 @@ const EmployerDashboard = () => {
 
             {/* Stats */}
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-               {(dashboardData?.stats || fallbackOverview.stats).map((stat) => (
-                  <StatCard
-                     key={stat.label}
-                     label={stat.label}
-                     value={stat.value}
-                     change={stat.change}
-                  />
-               ))}
+               {(dashboardData?.stats || fallbackOverview.stats).map(
+                  (stat, i) => (
+                     <StatCard
+                        key={stat.label}
+                        label={stat.label}
+                        value={stat.value}
+                        change={stat.change}
+                        index={i}
+                     />
+                  ),
+               )}
             </div>
 
             {/* Recent applications + Active roles */}
@@ -206,18 +212,18 @@ const EmployerDashboard = () => {
                      {recentApplications.map((app) => (
                         <div
                            key={app.id}
-                           className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-outline bg-white/70 p-4"
+                           className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-outline/60 bg-neutral/40 p-4 transition hover:bg-neutral/70"
                         >
                            <div>
-                              <p className="text-sm font-semibold text-primary">
+                              <p className="text-sm font-semibold text-text">
                                  {app.name}
                               </p>
-                              <p className="text-xs text-label">{app.role}</p>
+                              <p className="text-xs text-muted">{app.role}</p>
                            </div>
                            <div className="flex items-center gap-3">
                               <StatusBadge status={app.status} />
-                              <span className="text-xs text-label">
-                                 <Clock className="mr-1 inline h-3 w-3" />
+                              <span className="flex items-center gap-1 text-xs text-muted">
+                                 <Clock className="h-3 w-3" />
                                  {app.time}
                               </span>
                            </div>
@@ -378,41 +384,53 @@ const EmployerDashboard = () => {
                title="Hiring insights"
                subtitle="Quick look at internship engagement this month."
             >
-               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                  <div className="rounded-xl border border-outline bg-white/70 p-4">
-                     <p className="text-xs uppercase tracking-[0.2em] text-label">
-                        Views
-                     </p>
-                     <p className="mt-2 text-2xl font-semibold text-primary">
-                        4,280
-                     </p>
-                     <p className="mt-1 text-xs text-label">
-                        <TrendingUp className="mr-1 inline h-3 w-3" />
-                        12% higher than last month
-                     </p>
-                  </div>
-                  <div className="rounded-xl border border-outline bg-white/70 p-4">
-                     <p className="text-xs uppercase tracking-[0.2em] text-label">
-                        Conversion
-                     </p>
-                     <p className="mt-2 text-2xl font-semibold text-primary">
-                        5.6%
-                     </p>
-                     <p className="mt-1 text-xs text-label">
-                        from view to application
-                     </p>
-                  </div>
-                  <div className="rounded-xl border border-outline bg-white/70 p-4">
-                     <p className="text-xs uppercase tracking-[0.2em] text-label">
-                        Response time
-                     </p>
-                     <p className="mt-2 text-2xl font-semibold text-primary">
-                        14 hrs
-                     </p>
-                     <p className="mt-1 text-xs text-label">
-                        average recruiter reply
-                     </p>
-                  </div>
+               <div className="grid gap-4 sm:grid-cols-3">
+                  {[
+                     {
+                        label: "Views",
+                        value: "4,280",
+                        sub: "12% higher than last month",
+                        icon: TrendingUp,
+                        color: "text-accent",
+                        bg: "bg-accent/8",
+                     },
+                     {
+                        label: "Conversion",
+                        value: "5.6%",
+                        sub: "from view to application",
+                        icon: Users,
+                        color: "text-secondary",
+                        bg: "bg-secondary/8",
+                     },
+                     {
+                        label: "Response time",
+                        value: "14 hrs",
+                        sub: "average recruiter reply",
+                        icon: Clock,
+                        color: "text-primary",
+                        bg: "bg-primary/8",
+                     },
+                  ].map((s) => (
+                     <div
+                        key={s.label}
+                        className="flex items-start gap-3 rounded-xl border border-outline/60 bg-white p-4 shadow-sm"
+                     >
+                        <span
+                           className={`mt-0.5 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl ${s.bg}`}
+                        >
+                           <s.icon className={`h-4 w-4 ${s.color}`} />
+                        </span>
+                        <div>
+                           <p className="text-xs font-semibold uppercase tracking-widest text-muted">
+                              {s.label}
+                           </p>
+                           <p className="mt-1 text-2xl font-bold tracking-tight text-text">
+                              {s.value}
+                           </p>
+                           <p className="mt-0.5 text-xs text-label">{s.sub}</p>
+                        </div>
+                     </div>
+                  ))}
                </div>
             </SectionCard>
 

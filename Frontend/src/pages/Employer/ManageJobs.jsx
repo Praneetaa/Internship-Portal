@@ -90,7 +90,7 @@ const ManageJobs = () => {
          <div className="space-y-6">
             <div className="flex flex-wrap items-start justify-between gap-4">
                <div>
-                  <h1 className="text-2xl font-bold text-primary">
+                  <h1 className="text-2xl font-bold text-text">
                      Manage internships
                   </h1>
                   <p className="mt-1 text-sm text-label">
@@ -137,7 +137,7 @@ const ManageJobs = () => {
                      value={query}
                      onChange={(e) => setQuery(e.target.value)}
                      placeholder="Search internships…"
-                     className="w-full rounded-full border border-outline bg-white pl-9 pr-4 py-2 text-sm text-paragraph outline-none focus:border-accent focus:ring-2 focus:ring-accent/30"
+                     className="w-full rounded-xl border border-outline bg-white pl-9 pr-4 py-2 text-sm text-paragraph outline-none transition-all hover:border-muted focus:border-accent focus:ring-2 focus:ring-accent/20"
                   />
                </div>
                <div className="flex gap-1 rounded-xl border border-outline bg-white p-1">

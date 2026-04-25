@@ -12,21 +12,30 @@ const formatRole = (role) => {
    return role.charAt(0).toUpperCase() + role.slice(1);
 };
 
+const getInitials = (name) => {
+   if (!name) return "U";
+   const parts = name.trim().split(" ");
+   return parts.length > 1
+      ? `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase()
+      : name[0].toUpperCase();
+};
+
 const ProfileDropdown = ({ user, isOpen, onToggle, onLogout }) => {
    const displayName = getDisplayName(user);
    const displayEmail = getDisplayEmail(user);
    const displayRole = formatRole(user?.role);
+   const initials = getInitials(displayName);
    const profilePath =
-      user?.role === "organization" ? "/company-profile" : "/profile";
+      user?.role === "organization" ? "/company-profile" : "/candidate-profile";
 
    return (
       <div className="relative">
          <button
             type="button"
             onClick={onToggle}
-            className="flex items-center gap-2 rounded-md bg-white px-3 py-2 text-sm font-medium text-paragraph transition hover:bg-neutral"
+            className="flex cursor-pointer items-center gap-2.5 rounded-xl px-2.5 py-1.5 transition hover:bg-neutral"
          >
-            <span className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-primary/10 text-primary">
+            <span className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-primary to-secondary text-xs font-bold text-white shadow-sm">
                {user?.avatar ? (
                   <img
                      src={user.avatar}
@@ -34,24 +43,25 @@ const ProfileDropdown = ({ user, isOpen, onToggle, onLogout }) => {
                      className="h-full w-full object-cover"
                   />
                ) : (
-                  <User className="h-4 w-4" />
+                  initials
                )}
             </span>
-            <span className="hidden sm:flex flex-col items-start leading-tight">
-               <span className="text-sm font-semibold text-paragraph">
+            <span className="hidden flex-col items-start leading-tight sm:flex">
+               <span className="text-sm font-semibold text-text">
                   {displayName}
                </span>
-               <span className="text-xs text-label">{displayRole}</span>
+               <span className="text-xs text-muted">{displayRole}</span>
             </span>
-            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-neutral">
-               <ChevronDown className="h-4 w-4 text-icon" />
-            </span>
+            <ChevronDown
+               className={`h-3.5 w-3.5 text-muted transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
+            />
          </button>
 
          {isOpen && (
-            <div className="absolute right-0 z-50 mt-2 w-64 rounded-md border border-outline bg-white p-3">
-               <div className="flex items-center gap-3 pb-3">
-                  <span className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-primary/10 text-primary">
+            <div className="absolute right-0 z-50 mt-2 w-64 overflow-hidden rounded-2xl border border-outline/60 bg-white shadow-xl shadow-slate-900/10">
+               {/* User info header */}
+               <div className="flex items-center gap-3 bg-gradient-to-r from-primary/5 to-secondary/5 px-4 py-3">
+                  <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-primary to-secondary text-sm font-bold text-white shadow-sm">
                      {user?.avatar ? (
                         <img
                            src={user.avatar}
@@ -59,29 +69,32 @@ const ProfileDropdown = ({ user, isOpen, onToggle, onLogout }) => {
                            className="h-full w-full object-cover"
                         />
                      ) : (
-                        <User className="h-5 w-5" />
+                        initials
                      )}
                   </span>
                   <div className="min-w-0">
-                     <p className="truncate text-sm font-semibold text-paragraph">
+                     <p className="truncate text-sm font-semibold text-text">
                         {displayName}
                      </p>
-                     <p className="truncate text-xs text-label">
+                     <p className="truncate text-xs text-muted">
                         {displayEmail}
                      </p>
                   </div>
                </div>
-               <div className="mt-2 space-y-1">
+
+               {/* Menu items */}
+               <div className="p-2">
                   <Link
                      to={profilePath}
-                     className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-label hover:bg-neutral hover:text-primary"
+                     className="flex w-full cursor-pointer items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium text-label transition hover:bg-neutral hover:text-text"
                   >
+                     <User className="h-4 w-4" />
                      View profile
                   </Link>
                   <button
                      type="button"
                      onClick={onLogout}
-                     className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-error hover:bg-red-50"
+                     className="flex w-full cursor-pointer items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium text-error transition hover:bg-red-50"
                   >
                      <LogOut className="h-4 w-4" />
                      Logout

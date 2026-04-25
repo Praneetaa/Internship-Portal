@@ -212,7 +212,7 @@ const JobsTab = ({ user, updateUser }) => {
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   placeholder="Search roles…"
-                  className="w-full rounded-full border border-outline bg-white pl-9 pr-4 py-2 text-sm text-paragraph outline-none focus:border-accent focus:ring-2 focus:ring-accent/30"
+                  className="w-full rounded-xl border border-outline bg-white pl-9 pr-4 py-2 text-sm text-paragraph outline-none transition-all hover:border-muted focus:border-accent focus:ring-2 focus:ring-accent/20"
                />
             </div>
 
@@ -599,7 +599,7 @@ const EventsTab = ({ user }) => {
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   placeholder="Search events…"
-                  className="w-full rounded-full border border-outline bg-white pl-9 pr-4 py-2 text-sm text-paragraph outline-none focus:border-accent focus:ring-2 focus:ring-accent/30"
+                  className="w-full rounded-xl border border-outline bg-white pl-9 pr-4 py-2 text-sm text-paragraph outline-none transition-all hover:border-muted focus:border-accent focus:ring-2 focus:ring-accent/20"
                />
             </div>
 
@@ -964,33 +964,40 @@ const ApplicantsDashboard = () => {
          navItems={NAVIGATION_MENU_APPLICANT}
       >
          <div className="space-y-6">
-            <div>
-               <h1 className="text-2xl font-semibold text-primary">
-                  {activeTab === "jobs" ? "Find internships" : "Explore events"}
-               </h1>
-               <p className="mt-1 text-sm text-label">
-                  {activeTab === "jobs"
-                     ? "Browse open roles and apply directly."
-                     : "Discover workshops, webinars, and career events near you."}
-               </p>
-            </div>
+            <div className="flex flex-wrap items-end justify-between gap-4">
+               <div>
+                  <p className="text-[11px] font-bold uppercase tracking-widest text-muted">
+                     {activeTab === "jobs" ? "Internships" : "Events"}
+                  </p>
+                  <h1 className="mt-1 text-2xl font-bold text-text">
+                     {activeTab === "jobs"
+                        ? "Find internships"
+                        : "Explore events"}
+                  </h1>
+                  <p className="mt-1 text-sm text-label">
+                     {activeTab === "jobs"
+                        ? "Browse open roles and apply directly."
+                        : "Discover workshops, webinars, and career events near you."}
+                  </p>
+               </div>
 
-            {/* Tab switcher */}
-            <div className="flex gap-1 rounded-xl border border-outline bg-white/90 p-1 w-fit shadow-sm">
-               {tabs.map((tab) => (
-                  <button
-                     key={tab.id}
-                     type="button"
-                     onClick={() => setActiveTab(tab.id)}
-                     className={`rounded-lg px-5 py-2 text-sm font-semibold transition ${
-                        activeTab === tab.id
-                           ? "bg-primary text-white shadow-sm"
-                           : "text-label hover:text-primary"
-                     }`}
-                  >
-                     {tab.label}
-                  </button>
-               ))}
+               {/* Tab switcher */}
+               <div className="flex gap-1 rounded-xl border border-outline/60 bg-white p-1 shadow-sm">
+                  {tabs.map((tab) => (
+                     <button
+                        key={tab.id}
+                        type="button"
+                        onClick={() => setActiveTab(tab.id)}
+                        className={`cursor-pointer rounded-lg px-5 py-2 text-sm font-semibold transition-all ${
+                           activeTab === tab.id
+                              ? "bg-primary text-white shadow-sm"
+                              : "text-label hover:text-text"
+                        }`}
+                     >
+                        {tab.label}
+                     </button>
+                  ))}
+               </div>
             </div>
 
             {activeTab === "jobs" ? (

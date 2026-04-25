@@ -7,13 +7,20 @@ import {
    EyeOff,
    Loader,
    AlertCircle,
-   Briefcase,
+   ArrowRight,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import axiosInstance from "../../utils/axiosInstances";
 import { API_PATHS } from "../../utils/apiPaths";
 import { useAuth } from "../../context/AuthContext";
+
+const panelStats = [
+   ["200+", "Open roles"],
+   ["3k+", "Candidates"],
+   ["60+", "Partner orgs"],
+   ["92%", "Match rate"],
+];
 
 const Login = () => {
    const { login } = useAuth();
@@ -80,47 +87,56 @@ const Login = () => {
       }
    };
 
+   const inputCls = (hasError) =>
+      `w-full rounded-xl border bg-white px-4 py-2.5 text-sm text-paragraph outline-none transition-all placeholder:text-icon focus:border-accent focus:ring-2 focus:ring-accent/20 ${hasError ? "border-error/60 focus:border-error focus:ring-error/20" : "border-outline hover:border-muted"}`;
+
    return (
-      <div className="flex min-h-screen bg-neutral">
-         {/* Left decorative panel */}
-         <div className="hidden lg:flex lg:w-[45%] flex-col justify-between bg-primary p-12 relative overflow-hidden">
-            <div className="absolute inset-0 opacity-10">
-               <div className="absolute top-20 left-10 w-64 h-64 rounded-full border-2 border-white" />
-               <div className="absolute bottom-20 right-10 w-96 h-96 rounded-full border border-white" />
-               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 rounded-full border border-white" />
+      <div className="flex min-h-screen bg-background">
+         {/* Left branding panel */}
+         <div className="relative hidden overflow-hidden lg:flex lg:w-[44%] lg:flex-col lg:justify-between bg-gradient-to-br from-primary via-primary to-[#1a246b] p-12">
+            {/* Decorative rings */}
+            <div className="pointer-events-none absolute inset-0">
+               <div className="absolute -right-20 -top-20 h-72 w-72 rounded-full border border-white/10" />
+               <div className="absolute -right-10 -top-10 h-48 w-48 rounded-full border border-white/8" />
+               <div className="absolute bottom-20 left-10 h-56 w-56 rounded-full border border-white/8" />
+               <div className="absolute -bottom-10 -left-10 h-80 w-80 rounded-full border border-white/6" />
+               <div className="absolute left-1/2 top-1/2 h-96 w-96 -translate-x-1/2 -translate-y-1/2 rounded-full bg-secondary/10 blur-3xl" />
             </div>
-            <Link to="/" className="relative flex items-center gap-3">
-               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/20 backdrop-blur">
-                  <Briefcase className="h-5 w-5 text-white" />
-               </div>
+
+            <Link
+               to="/"
+               className="relative flex items-center gap-3"
+            >
+               <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/15 backdrop-blur-sm text-sm font-bold text-white">
+                  B
+               </span>
                <span className="text-xl font-bold text-white">Beaconn</span>
             </Link>
+
             <div className="relative space-y-6">
-               <h2 className="text-4xl font-bold text-white leading-tight">
-                  Your next internship starts here.
+               <h2 className="text-4xl font-bold leading-tight text-white">
+                  Your next internship
+                  <br />
+                  starts here.
                </h2>
-               <p className="text-white/70 text-base leading-relaxed">
+               <p className="max-w-xs text-base leading-relaxed text-white/65">
                   Join thousands of candidates discovering internships and
                   career events tailored for early talent.
                </p>
-               <div className="grid grid-cols-2 gap-4 pt-4">
-                  {[
-                     ["200+", "Open roles"],
-                     ["3k+", "Candidates"],
-                     ["60+", "Partner orgs"],
-                     ["92%", "Match rate"],
-                  ].map(([val, label]) => (
+               <div className="grid grid-cols-2 gap-3 pt-2">
+                  {panelStats.map(([val, label]) => (
                      <div
                         key={label}
-                        className="rounded-2xl border border-white/20 bg-white/10 p-4 backdrop-blur"
+                        className="rounded-2xl border border-white/15 bg-white/8 p-4 backdrop-blur-sm"
                      >
                         <p className="text-2xl font-bold text-white">{val}</p>
-                        <p className="text-sm text-white/60 mt-0.5">{label}</p>
+                        <p className="mt-0.5 text-xs text-white/55">{label}</p>
                      </div>
                   ))}
                </div>
             </div>
-            <p className="relative text-sm text-white/40">
+
+            <p className="relative text-xs text-white/35">
                © 2026 Beaconn. All rights reserved.
             </p>
          </div>
@@ -128,23 +144,26 @@ const Login = () => {
          {/* Right form panel */}
          <div className="flex flex-1 flex-col items-center justify-center px-6 py-12">
             <motion.div
-               initial={{ opacity: 0, y: 24 }}
+               initial={{ opacity: 0, y: 20 }}
                animate={{ opacity: 1, y: 0 }}
-               transition={{ duration: 0.5, ease: "easeOut" }}
+               transition={{ duration: 0.45, ease: "easeOut" }}
                className="w-full max-w-md"
             >
                {/* Mobile logo */}
-               <Link to="/" className="lg:hidden flex items-center gap-2 mb-8">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-                     <Briefcase className="h-4 w-4 text-white" />
-                  </div>
+               <Link
+                  to="/"
+                  className="mb-8 flex items-center gap-2.5 lg:hidden"
+               >
+                  <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-secondary text-sm font-bold text-white">
+                     B
+                  </span>
                   <span className="text-lg font-bold text-primary">
                      Beaconn
                   </span>
                </Link>
 
                <div className="mb-8">
-                  <h1 className="text-3xl font-bold text-primary">
+                  <h1 className="text-3xl font-bold text-text">
                      Welcome back
                   </h1>
                   <p className="mt-2 text-sm text-label">
@@ -153,15 +172,16 @@ const Login = () => {
                </div>
 
                <form onSubmit={handleLogin} className="space-y-5">
-                  <div className="space-y-1.5">
+                  {/* Email */}
+                  <div className="flex flex-col gap-1.5">
                      <label
                         htmlFor="email"
-                        className="block text-sm font-semibold text-primary"
+                        className="text-xs font-semibold uppercase tracking-wide text-label"
                      >
                         Email address
                      </label>
                      <div className="relative">
-                        <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-icon" />
+                        <Mail className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-icon" />
                         <input
                            id="email"
                            type="text"
@@ -169,26 +189,27 @@ const Login = () => {
                            placeholder="you@email.com"
                            value={formData.email}
                            onChange={handleInputChange}
-                           className={`w-full rounded-xl border py-3 pl-10 pr-4 text-sm text-paragraph outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/20 ${formState.errors.email ? "border-error bg-error/5" : "border-outline bg-white"}`}
+                           className={`${inputCls(formState.errors.email)} pl-10`}
                         />
                      </div>
                      {formState.errors.email && (
-                        <p className="flex items-center gap-1.5 text-xs text-error">
-                           <AlertCircle className="h-3.5 w-3.5" />
+                        <p className="flex items-center gap-1.5 text-xs font-medium text-error">
+                           <AlertCircle className="h-3.5 w-3.5 flex-shrink-0" />
                            {formState.errors.email}
                         </p>
                      )}
                   </div>
 
-                  <div className="space-y-1.5">
+                  {/* Password */}
+                  <div className="flex flex-col gap-1.5">
                      <label
                         htmlFor="password"
-                        className="block text-sm font-semibold text-primary"
+                        className="text-xs font-semibold uppercase tracking-wide text-label"
                      >
                         Password
                      </label>
                      <div className="relative">
-                        <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-icon" />
+                        <Lock className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-icon" />
                         <input
                            id="password"
                            name="password"
@@ -196,7 +217,7 @@ const Login = () => {
                            placeholder="Enter your password"
                            value={formData.password}
                            onChange={handleInputChange}
-                           className={`w-full rounded-xl border py-3 pl-10 pr-11 text-sm text-paragraph outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/20 ${formState.errors.password ? "border-error bg-error/5" : "border-outline bg-white"}`}
+                           className={`${inputCls(formState.errors.password)} pl-10 pr-11`}
                         />
                         <button
                            type="button"
@@ -206,7 +227,7 @@ const Login = () => {
                                  showPassword: !p.showPassword,
                               }))
                            }
-                           className="absolute right-3.5 top-1/2 -translate-y-1/2 text-icon hover:text-primary transition"
+                           className="absolute right-3.5 top-1/2 -translate-y-1/2 cursor-pointer text-icon transition hover:text-primary"
                         >
                            {formState.showPassword ? (
                               <Eye className="h-4 w-4" />
@@ -216,15 +237,15 @@ const Login = () => {
                         </button>
                      </div>
                      {formState.errors.password && (
-                        <p className="flex items-center gap-1.5 text-xs text-error">
-                           <AlertCircle className="h-3.5 w-3.5" />
+                        <p className="flex items-center gap-1.5 text-xs font-medium text-error">
+                           <AlertCircle className="h-3.5 w-3.5 flex-shrink-0" />
                            {formState.errors.password}
                         </p>
                      )}
                   </div>
 
                   {formState.errors.submit && (
-                     <div className="flex items-center gap-2.5 rounded-xl border border-error/30 bg-error/5 p-3.5">
+                     <div className="flex items-center gap-2.5 rounded-xl border border-error/25 bg-error/5 px-4 py-3">
                         <AlertCircle className="h-4 w-4 flex-shrink-0 text-error" />
                         <p className="text-sm text-error">
                            {formState.errors.submit}
@@ -235,15 +256,18 @@ const Login = () => {
                   <button
                      type="submit"
                      disabled={formState.loading}
-                     className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3 text-sm font-semibold text-white transition hover:bg-secondary disabled:opacity-60"
+                     className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-primary py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-secondary hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60"
                   >
                      {formState.loading ? (
                         <>
-                           <Loader className="h-4 w-4 animate-spin" /> Signing
-                           in…
+                           <Loader className="h-4 w-4 animate-spin" />
+                           Signing in…
                         </>
                      ) : (
-                        "Sign in"
+                        <>
+                           Sign in
+                           <ArrowRight className="h-4 w-4" />
+                        </>
                      )}
                   </button>
                </form>
@@ -252,7 +276,7 @@ const Login = () => {
                   Don't have an account?{" "}
                   <Link
                      to="/Signup"
-                     className="font-semibold text-primary hover:text-secondary transition"
+                     className="font-semibold text-primary transition hover:text-secondary"
                   >
                      Create one
                   </Link>

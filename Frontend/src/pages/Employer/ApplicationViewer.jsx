@@ -116,7 +116,7 @@ const ApplicationViewer = () => {
             {/* Header */}
             <div className="flex flex-wrap items-start justify-between gap-4">
                <div>
-                  <h1 className="text-2xl font-bold text-primary">
+                  <h1 className="text-2xl font-bold text-text">
                      Applications
                   </h1>
                   <p className="mt-1 text-sm text-label">
@@ -144,7 +144,7 @@ const ApplicationViewer = () => {
                         setQuery("");
                         setStatusFilter("All");
                      }}
-                     className="w-full appearance-none rounded-xl border border-outline bg-white py-3 pl-4 pr-10 text-sm font-semibold text-primary outline-none focus:border-accent focus:ring-2 focus:ring-accent/30"
+                     className="w-full appearance-none rounded-xl border border-outline bg-white py-3 pl-4 pr-10 text-sm font-semibold text-primary outline-none focus:border-accent focus:ring-2 focus:ring-accent/20"
                   >
                      {jobs.length === 0 && (
                         <option value="">No internships found</option>
@@ -188,7 +188,7 @@ const ApplicationViewer = () => {
                      value={query}
                      onChange={(e) => setQuery(e.target.value)}
                      placeholder="Search applicants by name or email…"
-                     className="w-full rounded-xl border border-outline bg-white/90 py-3 pl-11 pr-4 text-sm text-paragraph outline-none shadow-sm focus:border-accent focus:ring-2 focus:ring-accent/30"
+                     className="w-full rounded-xl border border-outline bg-white/90 py-3 pl-11 pr-4 text-sm text-paragraph outline-none shadow-sm focus:border-accent focus:ring-2 focus:ring-accent/20"
                   />
                </div>
             )}
@@ -284,7 +284,7 @@ const ApplicationViewer = () => {
                                           )
                                        }
                                        disabled={isUpdating}
-                                       className="appearance-none rounded-full border border-outline bg-white py-1.5 pl-3 pr-8 text-xs font-semibold text-primary outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/30 disabled:opacity-60"
+                                       className="appearance-none rounded-full border border-outline bg-white py-1.5 pl-3 pr-8 text-xs font-semibold text-primary outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/20 disabled:opacity-60"
                                     >
                                        {STATUS_OPTIONS.map((s) => (
                                           <option key={s} value={s}>
