@@ -2,9 +2,6 @@ import dotenv from "dotenv";
 
 import express from "express";
 import cors from "cors";
-import path from "path";
-import { fileURLToPath } from "url";
-
 import connectDB from "./config/db.js";
 import authRoutes from "./routes/authRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
@@ -13,14 +10,11 @@ import applicationRoutes from "./routes/applicationRoutes.js";
 import savedJobRoutes from "./routes/savedJobRoutes.js";
 import analyticsRoutes from "./routes/analyticsRoutes.js";
 import eventRoutes from "./routes/eventRoutes.js";
+import fileRoutes from "./routes/fileRoutes.js";
 
 dotenv.config();
 
 const app = express();
-
-// Fix for __dirname in ES modules
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 //Middleware to handle CORS
 app.use(
@@ -45,10 +39,12 @@ app.use("/api/applications", applicationRoutes);
 app.use("/api/saved-jobs", savedJobRoutes);
 app.use("/api/analytics", analyticsRoutes);
 app.use("/api/events", eventRoutes);
-
-//Server uploads folder
-app.use("/uploads", express.static(path.join(__dirname, "uploads"), {}));
+app.use("/api/files", fileRoutes);
 
 //Start server
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+if (!process.env.VERCEL) {
+   app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+}
+
+export default app;

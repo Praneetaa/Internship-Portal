@@ -1,11 +1,6 @@
-import fs from "fs";
-import path from "path";
-import { fileURLToPath } from "url";
+import mongoose from "mongoose";
 import User from "../models/User.js";
-
-// Fix for __dirname in ES modules
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+import File from "../models/File.js";
 
 //@desc Update user profile (name, avatar, company details)
 export const updateProfile = async (req, res) => {
@@ -53,8 +48,8 @@ export const deleteResume = async (req, res) => {
    try {
       const { resumeUrl } = req.body; //expect resumeUrl to be the URL of the resume
 
-      //Extract file name from the URL
-      const fileName = resumeUrl?.split("/")?.pop();
+      //Last URL segment is the File document id
+      const fileId = resumeUrl?.split("/")?.pop();
 
       const user = await User.findById(req.user._id);
       if (user.role !== "organization")
@@ -62,12 +57,9 @@ export const deleteResume = async (req, res) => {
             .status(403)
             .json({ message: "Only organization can delete resume" });
 
-      //Construct the full file path
-      const filePath = path.join(__dirname, "../uploads", fileName);
-
-      //Check if the file exists and then delete
-      if (fs.existsSync(filePath)) {
-         fs.unlinkSync(filePath); //Delete the file
+      //Drop the stored bytes from MongoDB
+      if (mongoose.isValidObjectId(fileId)) {
+         await File.findByIdAndDelete(fileId);
       }
 
       //Set the user's resume to an empty string
