@@ -16,6 +16,10 @@ dotenv.config();
 
 const app = express();
 
+// Behind Vercel's proxy: trust X-Forwarded-Proto so req.protocol is "https"
+// (uploaded file URLs would otherwise start with http:// and be blocked).
+app.set("trust proxy", true);
+
 //Middleware to handle CORS
 app.use(
    cors({
