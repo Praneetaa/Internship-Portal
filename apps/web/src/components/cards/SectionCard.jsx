@@ -1,11 +1,13 @@
-const SectionCard = ({ title, subtitle, action, children }) => {
+const SectionCard = ({ title, subtitle, action, children, className = "" }) => {
    return (
-      <div className="rounded-2xl border border-outline bg-white/90 p-6 shadow-sm">
+      <section
+         className={`rounded-xl border border-outline bg-white p-5 md:p-6 ${className}`}
+      >
          {(title || subtitle || action) && (
             <div className="flex flex-wrap items-start justify-between gap-4">
-               <div>
+               <div className="min-w-0">
                   {title && (
-                     <h3 className="text-lg font-semibold text-primary">
+                     <h3 className="text-base font-semibold text-text">
                         {title}
                      </h3>
                   )}
@@ -16,8 +18,10 @@ const SectionCard = ({ title, subtitle, action, children }) => {
                {action}
             </div>
          )}
-         <div className="mt-5">{children}</div>
-      </div>
+         <div className={title || subtitle || action ? "mt-5" : ""}>
+            {children}
+         </div>
+      </section>
    );
 };
 

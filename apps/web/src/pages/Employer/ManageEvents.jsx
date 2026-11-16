@@ -96,7 +96,7 @@ const ManageEvents = () => {
          <div className="space-y-6">
             <div className="flex flex-wrap items-start justify-between gap-4">
                <div>
-                  <h1 className="text-2xl font-semibold text-primary">
+                  <h1 className="text-2xl font-semibold text-text">
                      Manage events
                   </h1>
                   <p className="mt-1 text-sm text-label">
@@ -106,7 +106,7 @@ const ManageEvents = () => {
                <button
                   type="button"
                   onClick={() => navigate("/post-event")}
-                  className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-secondary"
+                  className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-secondary"
                >
                   <Plus className="h-4 w-4" />
                   Post new event
@@ -127,7 +127,7 @@ const ManageEvents = () => {
                   {events.map((ev) => (
                      <div
                         key={ev._id}
-                        className="flex flex-col overflow-hidden rounded-2xl border border-outline bg-white/90 shadow-sm"
+                        className="flex flex-col overflow-hidden rounded-xl border border-outline bg-white"
                      >
                         {/* Cover image */}
                         {ev.coverImage ? (
@@ -137,7 +137,7 @@ const ManageEvents = () => {
                               className="h-36 w-full object-cover"
                            />
                         ) : (
-                           <div className="flex h-36 w-full items-center justify-center bg-gradient-to-br from-primary/10 to-secondary/10">
+                           <div className="flex h-36 w-full items-center justify-center bg-neutral">
                               <CalendarDays className="h-10 w-10 text-primary/30" />
                            </div>
                         )}
@@ -184,7 +184,7 @@ const ManageEvents = () => {
                                  onClick={() =>
                                     navigate(`/post-event?eventId=${ev._id}`)
                                  }
-                                 className="inline-flex items-center gap-1.5 rounded-full border border-outline bg-white px-3 py-1.5 text-xs font-semibold text-primary hover:bg-neutral"
+                                 className="inline-flex items-center gap-1.5 rounded-lg border border-outline bg-white px-3 py-1.5 text-xs font-semibold text-primary hover:bg-neutral"
                               >
                                  <Pencil className="h-3.5 w-3.5" />
                                  Edit
@@ -193,7 +193,7 @@ const ManageEvents = () => {
                                  type="button"
                                  onClick={() => handleToggle(ev._id)}
                                  disabled={togglingId === ev._id}
-                                 className="inline-flex items-center gap-1.5 rounded-full border border-outline bg-white px-3 py-1.5 text-xs font-semibold text-primary hover:bg-neutral disabled:opacity-60"
+                                 className="inline-flex items-center gap-1.5 rounded-lg border border-outline bg-white px-3 py-1.5 text-xs font-semibold text-primary hover:bg-neutral disabled:opacity-60"
                               >
                                  {ev.isClosed ? (
                                     <ToggleLeft className="h-3.5 w-3.5" />

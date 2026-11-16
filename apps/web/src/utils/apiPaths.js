@@ -48,5 +48,8 @@ export const API_PATHS = {
       REGISTER: (id) => `/api/events/${id}/register`,
       UNREGISTER: (id) => `/api/events/${id}/register`,
       GET_REGISTRANTS: (id) => `/api/events/${id}/registrants`,
+      GET_SAVED_EVENTS: "/api/events/candidate/saved",
+      SAVE_EVENT: (id) => `/api/events/${id}/save`,
+      UNSAVE_EVENT: (id) => `/api/events/${id}/save`,
    },
 };

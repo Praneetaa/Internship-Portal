@@ -79,7 +79,7 @@ const EditProfileDetails = () => {
          <div className="space-y-6">
             <div className="flex flex-wrap items-start justify-between gap-4">
                <div>
-                  <h1 className="text-2xl font-bold text-primary">
+                  <h1 className="text-2xl font-semibold text-text">
                      Edit company profile
                   </h1>
                   <p className="mt-1 text-sm text-label">
@@ -88,7 +88,7 @@ const EditProfileDetails = () => {
                </div>
                <Link
                   to="/company-profile"
-                  className="inline-flex items-center gap-2 rounded-full border border-outline bg-white px-4 py-2 text-sm font-semibold text-primary hover:bg-neutral transition"
+                  className="inline-flex items-center gap-2 rounded-lg border border-outline bg-white px-4 py-2 text-sm font-semibold text-primary hover:bg-neutral transition"
                >
                   <ArrowLeft className="h-4 w-4" /> Back to profile
                </Link>
@@ -96,13 +96,13 @@ const EditProfileDetails = () => {
 
             <form onSubmit={handleSave} className="space-y-5">
                {/* Logo upload */}
-               <div className="rounded-2xl border border-outline bg-white/90 p-6 shadow-sm">
-                  <h2 className="text-base font-semibold text-primary mb-4">
+               <div className="rounded-xl border border-outline bg-white p-6">
+                  <h2 className="text-base font-semibold text-text mb-4">
                      Company logo
                   </h2>
                   <div className="flex items-center gap-5">
                      <div className="relative">
-                        <div className="h-20 w-20 overflow-hidden rounded-2xl border border-outline bg-neutral flex items-center justify-center">
+                        <div className="h-20 w-20 overflow-hidden rounded-xl border border-outline bg-neutral flex items-center justify-center">
                            {formData.logo ? (
                               <img
                                  src={formData.logo}
@@ -148,8 +148,8 @@ const EditProfileDetails = () => {
                </div>
 
                {/* Company details */}
-               <div className="rounded-2xl border border-outline bg-white/90 p-6 shadow-sm">
-                  <h2 className="text-base font-semibold text-primary mb-4">
+               <div className="rounded-xl border border-outline bg-white p-6">
+                  <h2 className="text-base font-semibold text-text mb-4">
                      Company details
                   </h2>
                   <div className="grid gap-4 sm:grid-cols-2">
@@ -200,8 +200,8 @@ const EditProfileDetails = () => {
                </div>
 
                {/* About */}
-               <div className="rounded-2xl border border-outline bg-white/90 p-6 shadow-sm">
-                  <h2 className="text-base font-semibold text-primary mb-4">
+               <div className="rounded-xl border border-outline bg-white p-6">
+                  <h2 className="text-base font-semibold text-text mb-4">
                      About the company
                   </h2>
                   <TextArea
@@ -219,13 +219,13 @@ const EditProfileDetails = () => {
                   <button
                      type="submit"
                      disabled={isSaving}
-                     className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-2.5 text-sm font-semibold text-white hover:bg-secondary transition disabled:opacity-60"
+                     className="inline-flex items-center gap-2 rounded-lg bg-primary px-6 py-2.5 text-sm font-semibold text-white hover:bg-secondary transition disabled:opacity-60"
                   >
                      {isSaving ? "Saving…" : "Save changes"}
                   </button>
                   <Link
                      to="/company-profile"
-                     className="rounded-full border border-outline bg-white px-6 py-2.5 text-sm font-semibold text-primary hover:bg-neutral transition"
+                     className="rounded-lg border border-outline bg-white px-6 py-2.5 text-sm font-semibold text-primary hover:bg-neutral transition"
                   >
                      Cancel
                   </Link>

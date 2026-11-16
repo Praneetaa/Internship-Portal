@@ -7,13 +7,13 @@ const SelectInput = ({
    error,
 }) => {
    return (
-      <label className="block space-y-2 text-sm text-label">
-         <span className="font-medium text-primary">{label}</span>
+      <label className="block space-y-1.5 text-sm text-label">
+         <span className="font-medium text-text">{label}</span>
          <select
             name={name}
             value={value}
             onChange={onChange}
-            className={`w-full rounded-lg border px-3 py-2 text-sm text-paragraph outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/30 ${
+            className={`w-full rounded-lg border bg-white px-3 py-2.5 text-sm text-text placeholder:text-icon outline-none transition focus:border-primary focus:ring-4 focus:ring-primary/10 ${
                error ? "border-error" : "border-outline"
             }`}
          >

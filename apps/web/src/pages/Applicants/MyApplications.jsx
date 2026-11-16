@@ -71,7 +71,7 @@ const MyApplications = () => {
       >
          <div className="space-y-6">
             <div>
-               <h1 className="text-2xl font-bold text-primary">
+               <h1 className="text-2xl font-semibold text-text">
                   My applications
                </h1>
                <p className="mt-1 text-sm text-label">
@@ -106,7 +106,7 @@ const MyApplications = () => {
                   ].map((s) => (
                      <div
                         key={s.label}
-                        className="rounded-2xl border border-outline bg-white/90 p-4"
+                        className="rounded-xl border border-outline bg-white p-4"
                      >
                         <p className={`text-2xl font-bold ${s.color}`}>
                            {s.value}
@@ -118,9 +118,9 @@ const MyApplications = () => {
             )}
 
             {/* Application list */}
-            <div className="rounded-2xl border border-outline bg-white/90 shadow-sm overflow-hidden">
+            <div className="rounded-xl border border-outline bg-white overflow-hidden">
                <div className="border-b border-outline px-6 py-4">
-                  <h2 className="text-base font-semibold text-primary">
+                  <h2 className="text-base font-semibold text-text">
                      Application tracker
                   </h2>
                   <p className="text-xs text-label mt-0.5">
@@ -159,7 +159,7 @@ const MyApplications = () => {
                                  className="flex w-full items-center gap-4 px-6 py-4 text-left"
                               >
                                  {/* Company initial */}
-                                 <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary/15 to-secondary/15 text-sm font-bold text-primary">
+                                 <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-primary/[0.07] ring-1 ring-inset ring-primary/10 text-sm font-bold text-primary">
                                     {(app.job?.company?.companyName ||
                                        "C")[0].toUpperCase()}
                                  </div>

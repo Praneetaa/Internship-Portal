@@ -1,144 +1,317 @@
-import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
+   ArrowRight,
    Bookmark,
    BookmarkCheck,
+   Briefcase,
    CalendarDays,
-   Filter,
-   LayoutGrid,
-   List,
+   CheckCircle2,
+   ChevronDown,
+   Clock,
+   ExternalLink,
    MapPin,
    Search,
+   SlidersHorizontal,
+   Upload,
    Users,
-   Video,
-   Wifi,
-   Building2,
-   CheckCircle2,
+   X,
 } from "lucide-react";
 import axiosInstance from "../../utils/axiosInstances";
 import { API_PATHS } from "../../utils/apiPaths";
 import { useAuth } from "../../context/AuthContext";
 import uploadImage from "../../utils/uploadImage";
 import DashboardLayout from "../../components/layout/DashboardLayout";
-import SectionCard from "../../components/cards/SectionCard";
 import StatusBadge from "../../components/cards/StatusBadge";
 import EmptyState from "../../components/cards/EmptyState";
 import {
+   DateStub,
+   DeadlineHint,
+   EventCard,
+   JobCard,
+   OrgTile,
+   SeatsBar,
+   Tag,
+} from "../../components/opportunities/OpportunityCards";
+import {
    CATEGORIES,
-   NAVIGATION_MENU_APPLICANT,
    EVENT_TYPES,
+   NAVIGATION_MENU_APPLICANT,
 } from "../../utils/data";
+import {
+   daysUntil,
+   formatBaht,
+   formatDate,
+   formatDateTime,
+   relativeDays,
+} from "../../utils/format";
 
-const workModeOptions = ["Remote", "Hybrid", "On-site"];
-const eventModeOptions = ["Online", "In-Person", "Hybrid"];
+const WORK_MODES = ["Remote", "Hybrid", "On-site"];
+const EVENT_MODES = ["Online", "In-Person", "Hybrid"];
 
-const EVENT_TYPE_COLORS = {
-   Workshop: "bg-accent/10 text-accent",
-   Webinar: "bg-secondary/15 text-secondary",
-   Seminar: "bg-success/10 text-success",
-   Networking: "bg-primary/10 text-primary",
-   "Career Fair": "bg-error/10 text-error",
-   Other: "bg-neutral text-label",
+const getId = (item) => item?._id || item?.id;
+
+// ─────────────────────────────────────────────
+// Shared bits
+// ─────────────────────────────────────────────
+
+/** Toggle chip used for quick filters (work mode, event mode). */
+const FilterChip = ({ active, onClick, children }) => (
+   <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={active}
+      className={`rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
+         active
+            ? "border-primary bg-primary text-white"
+            : "border-outline bg-white text-paragraph hover:border-primary/40"
+      }`}
+   >
+      {children}
+   </button>
+);
+
+/** Small dropdown for longer option lists (category, event type). */
+const FilterMenu = ({ label, options, selected, onToggle, multiple = true }) => {
+   const [open, setOpen] = useState(false);
+   const ref = useRef(null);
+   useEffect(() => {
+      const close = (e) => ref.current && !ref.current.contains(e.target) && setOpen(false);
+      document.addEventListener("mousedown", close);
+      return () => document.removeEventListener("mousedown", close);
+   }, []);
+   const count = multiple ? selected.length : selected ? 1 : 0;
+   return (
+      <div className="relative" ref={ref}>
+         <button
+            type="button"
+            onClick={() => setOpen((p) => !p)}
+            aria-expanded={open}
+            className={`inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
+               count
+                  ? "border-primary/40 bg-primary/[0.05] text-primary"
+                  : "border-outline bg-white text-paragraph hover:border-primary/40"
+            }`}
+         >
+            {label}
+            {multiple && count > 0 && (
+               <span className="tabular rounded bg-primary px-1.5 text-xs text-white">
+                  {count}
+               </span>
+            )}
+            <ChevronDown className="h-4 w-4 text-icon" />
+         </button>
+         {open && (
+            <div className="absolute right-0 z-30 mt-2 max-h-72 w-56 overflow-auto rounded-xl border border-outline bg-white p-1.5 shadow-[0_8px_24px_rgba(16,26,58,0.08)]">
+               {options.map((opt) => {
+                  const isOn = multiple
+                     ? selected.includes(opt.value)
+                     : selected === opt.value;
+                  return (
+                     <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => {
+                           onToggle(opt.value);
+                           if (!multiple) setOpen(false);
+                        }}
+                        className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm transition-colors ${
+                           isOn ? "bg-primary/[0.06] text-primary" : "text-paragraph hover:bg-neutral"
+                        }`}
+                     >
+                        {opt.label}
+                        {isOn && <CheckCircle2 className="h-4 w-4" />}
+                     </button>
+                  );
+               })}
+            </div>
+         )}
+      </div>
+   );
 };
 
-const ModeIcon = ({ mode }) => {
-   if (mode === "Online") return <Wifi className="h-3.5 w-3.5" />;
-   if (mode === "In-Person") return <Building2 className="h-3.5 w-3.5" />;
-   return <Video className="h-3.5 w-3.5" />;
+const SearchBox = ({ value, onChange, placeholder }) => (
+   <div className="relative min-w-[200px] flex-1">
+      <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-icon" />
+      <input
+         type="search"
+         value={value}
+         onChange={(e) => onChange(e.target.value)}
+         placeholder={placeholder}
+         aria-label={placeholder}
+         className="w-full rounded-lg border border-outline bg-white py-2 pl-9 pr-3 text-sm text-text outline-none placeholder:text-icon focus:border-primary focus:ring-4 focus:ring-primary/10"
+      />
+   </div>
+);
+
+const ResultsLine = ({ shown, total, noun, onClear, hasFilters }) => (
+   <div className="flex items-center justify-between text-sm text-label">
+      <span className="tabular">
+         Showing {shown} of {total} {noun}
+      </span>
+      {hasFilters ? (
+         <button
+            type="button"
+            onClick={onClear}
+            className="inline-flex items-center gap-1 font-medium text-primary hover:underline"
+         >
+            <X className="h-3.5 w-3.5" /> Clear filters
+         </button>
+      ) : null}
+   </div>
+);
+
+/** On small screens, bring the detail panel into view after picking a card. */
+const useScrollDetailOnMobile = () => {
+   const ref = useRef(null);
+   const scroll = () => {
+      if (window.matchMedia("(max-width: 1023px)").matches)
+         setTimeout(() => ref.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
+   };
+   return [ref, scroll];
 };
 
-const formatEventDate = (dateStr) => {
-   if (!dateStr) return "—";
-   return new Date(dateStr).toLocaleString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-   });
+const DetailRow = ({ icon, label, children }) => {
+   const Icon = icon;
+   return (
+   <div className="flex items-start gap-3 py-2.5">
+      <Icon className="mt-0.5 h-4 w-4 flex-shrink-0 text-icon" />
+      <div className="min-w-0">
+         <p className="text-xs text-muted">{label}</p>
+         <p className="text-sm text-text">{children}</p>
+      </div>
+   </div>
+   );
 };
 
 // ─────────────────────────────────────────────
-// JOBS TAB
+// "Coming up" strip
 // ─────────────────────────────────────────────
-const JobsTab = ({ user, updateUser }) => {
-   const [jobs, setJobs] = useState([]);
+const ComingUp = ({ jobs, registrations, onOpenTab }) => {
+   const nextEvent = registrations
+      .map((r) => r.event)
+      .filter((ev) => ev && daysUntil(ev.date) >= 0)
+      .sort((a, b) => new Date(a.date) - new Date(b.date))[0];
+
+   const nextDeadline = jobs
+      .filter((j) => j.isSaved && !j.applicationStatus && j.deadline && daysUntil(j.deadline) >= 0)
+      .sort((a, b) => new Date(a.deadline) - new Date(b.deadline))[0];
+
+   const applied = jobs.filter((j) => j.applicationStatus).length;
+
+   return (
+      <div className="grid gap-3 md:grid-cols-3">
+         <button
+            type="button"
+            onClick={() => onOpenTab("events")}
+            className="flex items-center gap-3 rounded-xl border border-outline bg-white p-4 text-left transition-colors hover:border-primary/40"
+         >
+            {nextEvent ? (
+               <>
+                  <DateStub date={nextEvent.date} />
+                  <div className="min-w-0">
+                     <p className="text-xs font-medium text-muted">
+                        Your next event · {relativeDays(nextEvent.date)}
+                     </p>
+                     <p className="truncate text-sm font-semibold text-text">{nextEvent.title}</p>
+                  </div>
+               </>
+            ) : (
+               <>
+                  <CalendarDays className="h-5 w-5 flex-shrink-0 text-icon" />
+                  <div>
+                     <p className="text-xs font-medium text-muted">No upcoming events</p>
+                     <p className="text-sm font-semibold text-text">Browse career events</p>
+                  </div>
+               </>
+            )}
+         </button>
+
+         <Link
+            to="/saved-jobs"
+            className="flex items-center gap-3 rounded-xl border border-outline bg-white p-4 transition-colors hover:border-primary/40"
+         >
+            <Clock className={`h-5 w-5 flex-shrink-0 ${nextDeadline ? "text-warning" : "text-icon"}`} />
+            <div className="min-w-0">
+               <p className="text-xs font-medium text-muted">
+                  {nextDeadline
+                     ? `Saved role closes ${relativeDays(nextDeadline.deadline)}`
+                     : "No saved deadlines"}
+               </p>
+               <p className="truncate text-sm font-semibold text-text">
+                  {nextDeadline ? nextDeadline.title : "Save roles to track deadlines"}
+               </p>
+            </div>
+         </Link>
+
+         <Link
+            to="/my-applications"
+            className="flex items-center gap-3 rounded-xl border border-outline bg-white p-4 transition-colors hover:border-primary/40"
+         >
+            <Briefcase className="h-5 w-5 flex-shrink-0 text-icon" />
+            <div>
+               <p className="text-xs font-medium text-muted">Applications</p>
+               <p className="text-sm font-semibold text-text">
+                  <span className="tabular">{applied}</span> sent · track status
+               </p>
+            </div>
+            <ArrowRight className="ml-auto h-4 w-4 text-icon" />
+         </Link>
+      </div>
+   );
+};
+
+// ─────────────────────────────────────────────
+// INTERNSHIPS TAB
+// ─────────────────────────────────────────────
+const JobsTab = ({ jobs, setJobs, user, updateUser }) => {
    const [query, setQuery] = useState("");
-   const [viewMode, setViewMode] = useState("grid");
-   const [selectedCategories, setSelectedCategories] = useState([]);
-   const [selectedWorkModes, setSelectedWorkModes] = useState([]);
-   const [selectedJobId, setSelectedJobId] = useState(null);
+   const [categories, setCategories] = useState([]);
+   const [workModes, setWorkModes] = useState([]);
+   const [selectedId, setSelectedId] = useState(null);
    const [isSaving, setIsSaving] = useState(false);
    const [isApplying, setIsApplying] = useState(false);
    const [resumeFile, setResumeFile] = useState(null);
    const [resumeUploading, setResumeUploading] = useState(false);
    const [resumeMessage, setResumeMessage] = useState("");
-   const [categoryOpen, setCategoryOpen] = useState(false);
-   const [workModeOpen, setWorkModeOpen] = useState(false);
+   const [detailRef, scrollToDetail] = useScrollDetailOnMobile();
 
-   const getId = (job) => job._id || job.id;
+   const toggle = (setter) => (val) =>
+      setter((prev) => (prev.includes(val) ? prev.filter((x) => x !== val) : [...prev, val]));
 
-   useEffect(() => {
-      if (!user) return;
-      axiosInstance
-         .get(API_PATHS.JOBS.GET_ALL_JOBS, {
-            params: { userId: user._id || user.id },
-         })
-         .then((res) => {
-            const sorted = (res.data || []).sort(
-               (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
-            );
-            setJobs(sorted);
-            setSelectedJobId(sorted[0] ? getId(sorted[0]) : null);
-         })
-         .catch(() => setJobs([]));
-   }, [user]);
-
-   const filteredJobs = useMemo(() => {
-      return jobs
-         .filter((job) => {
-            const matchQ = job.title
-               .toLowerCase()
-               .includes(query.toLowerCase());
-            const matchM =
-               selectedWorkModes.length === 0 ||
-               selectedWorkModes.includes(job.workMode);
-            const matchC =
-               selectedCategories.length === 0 ||
-               selectedCategories.includes(job.category);
-            return matchQ && matchM && matchC;
-         })
-         .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-   }, [jobs, query, selectedWorkModes, selectedCategories]);
+   const filtered = useMemo(() => {
+      const q = query.trim().toLowerCase();
+      return jobs.filter((job) => {
+         const company = (job.company?.companyName || "").toLowerCase();
+         const matchQ =
+            !q ||
+            job.title?.toLowerCase().includes(q) ||
+            company.includes(q) ||
+            job.location?.toLowerCase().includes(q);
+         const matchM = !workModes.length || workModes.includes(job.workMode);
+         const matchC = !categories.length || categories.includes(job.category);
+         return matchQ && matchM && matchC;
+      });
+   }, [jobs, query, workModes, categories]);
 
    useEffect(() => {
-      if (!selectedJobId && filteredJobs.length)
-         setSelectedJobId(getId(filteredJobs[0]));
-   }, [filteredJobs, selectedJobId]);
+      if (!filtered.some((j) => getId(j) === selectedId))
+         setSelectedId(filtered[0] ? getId(filtered[0]) : null);
+   }, [filtered, selectedId]);
 
-   const selectedJob = filteredJobs.find((j) => getId(j) === selectedJobId);
-
-   const toggleFilter = (setter) => (val) =>
-      setter((prev) =>
-         prev.includes(val) ? prev.filter((x) => x !== val) : [...prev, val],
-      );
+   const selected = filtered.find((j) => getId(j) === selectedId);
+   const hasFilters = query || workModes.length || categories.length;
 
    const handleSave = async (job) => {
       const id = getId(job);
       setIsSaving(true);
-      setJobs((prev) =>
-         prev.map((j) => (getId(j) === id ? { ...j, isSaved: !j.isSaved } : j)),
-      );
+      const flip = (list) => list.map((j) => (getId(j) === id ? { ...j, isSaved: !j.isSaved } : j));
+      setJobs(flip);
       try {
-         if (job.isSaved)
-            await axiosInstance.delete(API_PATHS.JOBS.UNSAVE_JOB(id));
+         if (job.isSaved) await axiosInstance.delete(API_PATHS.JOBS.UNSAVE_JOB(id));
          else await axiosInstance.post(API_PATHS.JOBS.SAVE_JOB(id));
       } catch {
-         setJobs((prev) =>
-            prev.map((j) =>
-               getId(j) === id ? { ...j, isSaved: !j.isSaved } : j,
-            ),
-         );
+         setJobs(flip);
       } finally {
          setIsSaving(false);
       }
@@ -147,368 +320,220 @@ const JobsTab = ({ user, updateUser }) => {
    const handleApply = async (job) => {
       const id = getId(job);
       if (!user?.resume) {
-         setResumeMessage("Please upload a resume before applying.");
+         setResumeMessage("Upload your resume first, then apply.");
          return;
       }
       setIsApplying(true);
+      const markApplied = (list) =>
+         list.map((j) => (getId(j) === id ? { ...j, applicationStatus: "Applied" } : j));
       try {
          await axiosInstance.post(API_PATHS.APPLICATIONS.APPLY_TO_JOB(id));
-         setJobs((prev) =>
-            prev.map((j) =>
-               getId(j) === id ? { ...j, applicationStatus: "Applied" } : j,
-            ),
-         );
+         setJobs(markApplied);
       } catch (err) {
-         if (err?.response?.status === 400) {
-            setJobs((prev) =>
-               prev.map((j) =>
-                  getId(j) === id ? { ...j, applicationStatus: "Applied" } : j,
-               ),
-            );
-         }
+         if (err?.response?.status === 400) setJobs(markApplied);
       } finally {
          setIsApplying(false);
       }
    };
 
    const handleResumeUpload = async () => {
-      if (!resumeFile) {
-         setResumeMessage("Please select a PDF file.");
-         return;
-      }
-      if (resumeFile.type !== "application/pdf") {
-         setResumeMessage("Resume must be a PDF.");
-         return;
-      }
+      if (!resumeFile) return setResumeMessage("Choose a PDF file first.");
+      if (resumeFile.type !== "application/pdf")
+         return setResumeMessage("Your resume must be a PDF.");
       setResumeUploading(true);
       setResumeMessage("");
       try {
          const res = await uploadImage(resumeFile);
          const url = res?.imageUrl;
-         if (!url) {
-            setResumeMessage("Upload failed. Please try again.");
-            return;
-         }
-         await axiosInstance.put(API_PATHS.AUTH.UPDATE_PROFILE, {
-            resume: url,
-         });
+         if (!url) return setResumeMessage("Upload failed. Please try again.");
+         await axiosInstance.put(API_PATHS.AUTH.UPDATE_PROFILE, { resume: url });
          updateUser({ resume: url });
-         setResumeMessage("Resume uploaded successfully.");
+         setResumeMessage("Resume uploaded. You can apply now.");
       } catch {
-         setResumeMessage("Unable to upload resume right now.");
+         setResumeMessage("We couldn't upload your resume right now.");
       } finally {
          setResumeUploading(false);
       }
    };
 
+   const company = selected?.company?.companyName || selected?.company?.name || "Company";
+
    return (
-      <div className="space-y-5">
-         {/* Search & filter bar */}
-         <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-outline bg-white/90 p-4 shadow-sm">
-            <div className="relative flex-1 min-w-[180px]">
-               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-icon" />
-               <input
-                  type="text"
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  placeholder="Search roles…"
-                  className="w-full rounded-full border border-outline bg-white pl-9 pr-4 py-2 text-sm text-paragraph outline-none focus:border-accent focus:ring-2 focus:ring-accent/30"
-               />
-            </div>
-
-            {/* View toggle */}
-            <div className="flex items-center gap-1 rounded-lg border border-outline bg-white p-1">
-               <button
-                  type="button"
-                  onClick={() => setViewMode("grid")}
-                  className={`rounded-md p-1.5 transition ${viewMode === "grid" ? "bg-primary/10 text-primary" : "text-icon hover:bg-neutral"}`}
-               >
-                  <LayoutGrid className="h-4 w-4" />
-               </button>
-               <button
-                  type="button"
-                  onClick={() => setViewMode("list")}
-                  className={`rounded-md p-1.5 transition ${viewMode === "list" ? "bg-primary/10 text-primary" : "text-icon hover:bg-neutral"}`}
-               >
-                  <List className="h-4 w-4" />
-               </button>
-            </div>
-
-            {/* Work mode filter */}
-            <div className="relative">
-               <button
-                  type="button"
-                  onClick={() => setWorkModeOpen((p) => !p)}
-                  className="inline-flex items-center gap-2 rounded-full border border-outline bg-white px-4 py-2 text-sm text-paragraph hover:bg-neutral"
-               >
-                  <Filter className="h-4 w-4 text-icon" />
-                  Work mode
-                  {selectedWorkModes.length > 0 && (
-                     <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs text-primary">
-                        {selectedWorkModes.length}
-                     </span>
-                  )}
-               </button>
-               {workModeOpen && (
-                  <div className="absolute z-30 mt-2 w-44 rounded-xl border border-outline bg-white p-3 shadow-sm">
-                     {workModeOptions.map((m) => (
-                        <label
-                           key={m}
-                           className="flex cursor-pointer items-center gap-2 py-1 text-sm text-label"
-                        >
-                           <input
-                              type="checkbox"
-                              checked={selectedWorkModes.includes(m)}
-                              onChange={() =>
-                                 toggleFilter(setSelectedWorkModes)(m)
-                              }
-                           />
-                           {m}
-                        </label>
-                     ))}
-                  </div>
-               )}
-            </div>
-
-            {/* Category filter */}
-            <div className="relative">
-               <button
-                  type="button"
-                  onClick={() => setCategoryOpen((p) => !p)}
-                  className="inline-flex items-center gap-2 rounded-full border border-outline bg-white px-4 py-2 text-sm text-paragraph hover:bg-neutral"
-               >
-                  <Filter className="h-4 w-4 text-icon" />
-                  Category
-                  {selectedCategories.length > 0 && (
-                     <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs text-primary">
-                        {selectedCategories.length}
-                     </span>
-                  )}
-               </button>
-               {categoryOpen && (
-                  <div className="absolute z-30 mt-2 max-h-60 w-56 overflow-auto rounded-xl border border-outline bg-white p-3 shadow-sm">
-                     {CATEGORIES.map((cat) => (
-                        <label
-                           key={cat.value}
-                           className="flex cursor-pointer items-center gap-2 py-1 text-sm text-label"
-                        >
-                           <input
-                              type="checkbox"
-                              checked={selectedCategories.includes(cat.value)}
-                              onChange={() =>
-                                 toggleFilter(setSelectedCategories)(cat.value)
-                              }
-                           />
-                           {cat.label}
-                        </label>
-                     ))}
-                  </div>
-               )}
-            </div>
+      <div className="space-y-4">
+         <div className="flex flex-wrap items-center gap-2">
+            <SearchBox
+               value={query}
+               onChange={setQuery}
+               placeholder="Search by role, company or city"
+            />
+            {WORK_MODES.map((m) => (
+               <FilterChip key={m} active={workModes.includes(m)} onClick={() => toggle(setWorkModes)(m)}>
+                  {m}
+               </FilterChip>
+            ))}
+            <FilterMenu
+               label="Category"
+               options={CATEGORIES}
+               selected={categories}
+               onToggle={toggle(setCategories)}
+            />
          </div>
 
-         {/* Main split layout */}
-         {filteredJobs.length === 0 ? (
+         <ResultsLine
+            shown={filtered.length}
+            total={jobs.length}
+            noun={jobs.length === 1 ? "internship" : "internships"}
+            hasFilters={hasFilters}
+            onClear={() => {
+               setQuery("");
+               setWorkModes([]);
+               setCategories([]);
+            }}
+         />
+
+         {filtered.length === 0 ? (
             <EmptyState
-               title="No matches yet"
-               description="Try a different keyword or remove filters."
+               icon={SlidersHorizontal}
+               title="No internships match"
+               description="Try another keyword or remove a filter."
             />
          ) : (
-            <div className="grid gap-5 lg:grid-cols-[1.1fr_0.9fr]">
-               {/* Job cards */}
-               <div
-                  className={`grid gap-3 ${viewMode === "grid" ? "sm:grid-cols-2" : "grid-cols-1"}`}
-               >
-                  {filteredJobs.map((job) => {
-                     const id = getId(job);
-                     const isSelected = id === selectedJobId;
-                     return (
-                        <button
-                           key={id}
-                           type="button"
-                           onClick={() => setSelectedJobId(id)}
-                           className={`group rounded-2xl border p-4 text-left transition ${
-                              isSelected
-                                 ? "border-primary bg-primary/5 shadow-sm"
-                                 : "border-outline bg-white/80 hover:border-primary/40 hover:shadow-sm"
-                           }`}
-                        >
-                           <div className="flex items-start gap-3">
-                              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary/15 to-secondary/15 text-sm font-bold text-primary">
-                                 {(job.company?.companyName ||
-                                    job.company?.name ||
-                                    "C")[0].toUpperCase()}
-                              </div>
-                              <div className="min-w-0 flex-1">
-                                 <p className="truncate text-sm font-semibold text-primary">
-                                    {job.title}
-                                 </p>
-                                 <p className="truncate text-xs text-label">
-                                    {job.company?.companyName || "Company"} ·{" "}
-                                    {job.location}
-                                 </p>
-                              </div>
-                              {job.applicationStatus && (
-                                 <StatusBadge status={job.applicationStatus} />
-                              )}
-                           </div>
-                           <div className="mt-3 flex flex-wrap gap-2">
-                              <span className="rounded-full bg-neutral px-2.5 py-0.5 text-xs text-label">
-                                 {job.workMode}
-                              </span>
-                              {job.category && (
-                                 <span className="rounded-full bg-neutral px-2.5 py-0.5 text-xs text-label">
-                                    {job.category}
-                                 </span>
-                              )}
-                              {job.stipend && (
-                                 <span className="rounded-full bg-success/10 px-2.5 py-0.5 text-xs text-success">
-                                    ฿{job.stipend}/mo
-                                 </span>
-                              )}
-                           </div>
-                           {job.isSaved && (
-                              <div className="mt-2 flex items-center gap-1 text-xs text-accent">
-                                 <BookmarkCheck className="h-3.5 w-3.5" /> Saved
-                              </div>
-                           )}
-                        </button>
-                     );
-                  })}
+            <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.95fr)]">
+               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+                  {filtered.map((job) => (
+                     <JobCard
+                        key={getId(job)}
+                        job={job}
+                        selected={getId(job) === selectedId}
+                        onClick={() => {
+                           setSelectedId(getId(job));
+                           scrollToDetail();
+                        }}
+                     />
+                  ))}
                </div>
 
-               {/* Detail panel */}
-               <div className="lg:sticky lg:top-28">
-                  {selectedJob ? (
-                     <SectionCard
-                        title={selectedJob.title}
-                        subtitle={`${selectedJob.company?.companyName || "Company"} · ${selectedJob.location}`}
-                        action={
-                           <Link
-                              to={`/jobs/${getId(selectedJob)}`}
-                              className="text-sm font-semibold text-primary"
-                           >
-                              Full view →
-                           </Link>
-                        }
-                     >
-                        <div className="flex flex-wrap gap-2">
-                           <span className="rounded-full bg-neutral px-2.5 py-0.5 text-xs text-label">
-                              {selectedJob.workMode}
-                           </span>
-                           {selectedJob.duration && (
-                              <span className="rounded-full bg-neutral px-2.5 py-0.5 text-xs text-label">
-                                 {selectedJob.duration}
+               {selected && (
+                  <aside ref={detailRef} className="scroll-mt-20 lg:sticky lg:top-24">
+                     <div className="rounded-xl border border-outline bg-white">
+                        <div className="border-b border-outline p-5">
+                           <div className="flex items-start gap-3">
+                              <OrgTile name={company} logo={selected.company?.companyLogo} size="h-12 w-12 text-base" />
+                              <div className="min-w-0 flex-1">
+                                 <h2 className="text-lg font-semibold text-text">{selected.title}</h2>
+                                 <p className="text-sm text-label">{company}</p>
+                              </div>
+                              {selected.applicationStatus && <StatusBadge status={selected.applicationStatus} />}
+                           </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-x-4 border-b border-outline px-5">
+                           <DetailRow icon={MapPin} label="Location">
+                              {selected.location || "—"} · {selected.workMode}
+                           </DetailRow>
+                           <DetailRow icon={Briefcase} label="Stipend">
+                              <span className="tabular">
+                                 {selected.stipend ? `${formatBaht(selected.stipend)} / month` : "Unpaid"}
                               </span>
+                           </DetailRow>
+                           {selected.duration && (
+                              <DetailRow icon={Clock} label="Duration">
+                                 {selected.duration}
+                              </DetailRow>
                            )}
-                           {selectedJob.category && (
-                              <span className="rounded-full bg-neutral px-2.5 py-0.5 text-xs text-label">
-                                 {selectedJob.category}
-                              </span>
+                           {selected.deadline && (
+                              <DetailRow icon={CalendarDays} label="Apply by">
+                                 {formatDate(selected.deadline)}
+                              </DetailRow>
                            )}
                         </div>
 
-                        {selectedJob.applicationStatus && (
-                           <div className="mt-4">
-                              <StatusBadge
-                                 status={selectedJob.applicationStatus}
-                              />
-                           </div>
-                        )}
+                        <div className="space-y-4 p-5 text-sm leading-relaxed text-paragraph">
+                           <p>{selected.description}</p>
+                           {selected.requirements && (
+                              <div>
+                                 <h3 className="mb-1 text-sm font-semibold text-text">Requirements</h3>
+                                 <p>{selected.requirements}</p>
+                              </div>
+                           )}
+                           {selected.responsibilities && (
+                              <div>
+                                 <h3 className="mb-1 text-sm font-semibold text-text">Responsibilities</h3>
+                                 <p>{selected.responsibilities}</p>
+                              </div>
+                           )}
+                        </div>
 
-                        <p className="mt-4 text-sm text-paragraph">
-                           {selectedJob.description}
-                        </p>
-
-                        {selectedJob.requirements && (
-                           <div className="mt-4 text-sm text-paragraph">
-                              <span className="font-semibold text-primary">
-                                 Requirements:{" "}
-                              </span>
-                              {selectedJob.requirements}
-                           </div>
-                        )}
-                        {selectedJob.responsibilities && (
-                           <div className="mt-2 text-sm text-paragraph">
-                              <span className="font-semibold text-primary">
-                                 Responsibilities:{" "}
-                              </span>
-                              {selectedJob.responsibilities}
-                           </div>
-                        )}
-
-                        {!user?.resume && (
-                           <div className="mt-5 w-full rounded-xl border border-outline bg-neutral/50 p-4">
-                              <p className="text-sm font-semibold text-primary">
-                                 Upload your resume to apply
+                        {!user?.resume && !selected.applicationStatus && (
+                           <div className="mx-5 mb-5 rounded-lg border border-dashed border-outline bg-neutral/60 p-4">
+                              <p className="text-sm font-semibold text-text">Add your resume to apply</p>
+                              <p className="mt-0.5 text-xs text-label">
+                                 PDF only. It's attached to every application you send.
                               </p>
-                              <div className="mt-3 flex flex-wrap items-center gap-3">
+                              <div className="mt-3 flex flex-wrap items-center gap-2">
                                  <input
                                     type="file"
                                     accept=".pdf"
-                                    onChange={(e) =>
-                                       setResumeFile(
-                                          e.target.files?.[0] || null,
-                                       )
-                                    }
-                                    className="text-xs"
+                                    onChange={(e) => setResumeFile(e.target.files?.[0] || null)}
+                                    className="max-w-full text-xs text-label file:mr-2 file:rounded-md file:border-0 file:bg-white file:px-2.5 file:py-1.5 file:text-xs file:font-medium file:text-text"
                                  />
                                  <button
                                     type="button"
                                     onClick={handleResumeUpload}
                                     disabled={resumeUploading}
-                                    className="rounded-full border border-outline bg-white px-4 py-1.5 text-xs font-semibold text-primary hover:bg-neutral disabled:opacity-60"
+                                    className="inline-flex items-center gap-1.5 rounded-lg border border-outline bg-white px-3 py-1.5 text-xs font-semibold text-text hover:border-primary/40 disabled:opacity-60"
                                  >
-                                    {resumeUploading
-                                       ? "Uploading…"
-                                       : "Upload PDF"}
+                                    <Upload className="h-3.5 w-3.5" />
+                                    {resumeUploading ? "Uploading…" : "Upload PDF"}
                                  </button>
                               </div>
-                              {resumeMessage && (
-                                 <p className="mt-2 text-xs text-label">
-                                    {resumeMessage}
-                                 </p>
-                              )}
+                              {resumeMessage && <p className="mt-2 text-xs text-label">{resumeMessage}</p>}
                            </div>
                         )}
 
-                        <div className="mt-5 flex flex-wrap gap-3">
+                        <div className="flex flex-wrap items-center gap-2 border-t border-outline p-5">
                            <button
                               type="button"
-                              onClick={() => handleApply(selectedJob)}
+                              onClick={() => handleApply(selected)}
                               disabled={
                                  isApplying ||
-                                 !!selectedJob.applicationStatus ||
-                                 !user?.resume
+                                 !!selected.applicationStatus ||
+                                 !user?.resume ||
+                                 daysUntil(selected.deadline) < 0
                               }
-                              className="rounded-full bg-primary px-5 py-2 text-sm font-semibold text-white hover:bg-secondary disabled:opacity-60"
+                              className="rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-50"
                            >
-                              {selectedJob.applicationStatus
+                              {selected.applicationStatus
                                  ? "Applied"
-                                 : "Apply now"}
+                                 : daysUntil(selected.deadline) < 0
+                                   ? "Applications closed"
+                                   : isApplying
+                                     ? "Applying…"
+                                     : "Apply now"}
                            </button>
                            <button
                               type="button"
-                              onClick={() => handleSave(selectedJob)}
+                              onClick={() => handleSave(selected)}
                               disabled={isSaving}
-                              className="inline-flex items-center gap-2 rounded-full border border-outline bg-white px-4 py-2 text-sm font-semibold text-primary hover:bg-neutral"
+                              className="inline-flex items-center gap-2 rounded-lg border border-outline bg-white px-4 py-2.5 text-sm font-semibold text-text transition-colors hover:border-primary/40"
                            >
-                              {selectedJob.isSaved ? (
-                                 <BookmarkCheck className="h-4 w-4" />
+                              {selected.isSaved ? (
+                                 <BookmarkCheck className="h-4 w-4 text-primary" />
                               ) : (
                                  <Bookmark className="h-4 w-4" />
                               )}
-                              {selectedJob.isSaved ? "Saved" : "Save"}
+                              {selected.isSaved ? "Saved" : "Save"}
                            </button>
+                           <Link
+                              to={`/jobs/${getId(selected)}`}
+                              className="ml-auto inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
+                           >
+                              Full details <ArrowRight className="h-4 w-4" />
+                           </Link>
                         </div>
-                     </SectionCard>
-                  ) : (
-                     <EmptyState
-                        title="Select a role"
-                        description="Choose an internship to preview details here."
-                     />
-                  )}
-               </div>
+                     </div>
+                  </aside>
+               )}
             </div>
          )}
       </div>
@@ -518,428 +543,261 @@ const JobsTab = ({ user, updateUser }) => {
 // ─────────────────────────────────────────────
 // EVENTS TAB
 // ─────────────────────────────────────────────
-const EventsTab = ({ user }) => {
-   const [events, setEvents] = useState([]);
+const EventsTab = ({ events, setEvents, loading }) => {
    const [query, setQuery] = useState("");
-   const [selectedType, setSelectedType] = useState("");
-   const [selectedMode, setSelectedMode] = useState("");
-   const [typeOpen, setTypeOpen] = useState(false);
-   const [modeOpen, setModeOpen] = useState(false);
-   const [selectedEvent, setSelectedEvent] = useState(null);
-   const [isRegistering, setIsRegistering] = useState(false);
-   const [loading, setLoading] = useState(true);
+   const [eventType, setEventType] = useState("");
+   const [modes, setModes] = useState([]);
+   const [selectedId, setSelectedId] = useState(null);
+   const [busy, setBusy] = useState(false);
+   const [detailRef, scrollToDetail] = useScrollDetailOnMobile();
 
-   const fetchEvents = async () => {
-      setLoading(true);
-      try {
-         const res = await axiosInstance.get(API_PATHS.EVENTS.GET_ALL_EVENTS, {
-            params: {
-               keyword: query || undefined,
-               eventType: selectedType || undefined,
-               mode: selectedMode || undefined,
-               userId: user?._id || user?.id,
-            },
-         });
-         const sorted = (res.data || []).sort(
-            (a, b) => new Date(a.date) - new Date(b.date),
-         );
-         setEvents(sorted);
-         if (!selectedEvent && sorted.length) setSelectedEvent(sorted[0]);
-      } catch {
-         setEvents([]);
-      } finally {
-         setLoading(false);
-      }
-   };
+   const filtered = useMemo(() => {
+      const q = query.trim().toLowerCase();
+      return events.filter((ev) => {
+         const org = (ev.organizer?.companyName || ev.organizer?.name || "").toLowerCase();
+         const matchQ =
+            !q || ev.title?.toLowerCase().includes(q) || org.includes(q) || ev.tags?.toLowerCase().includes(q);
+         const matchT = !eventType || ev.eventType === eventType;
+         const matchM = !modes.length || modes.includes(ev.mode);
+         return matchQ && matchT && matchM;
+      });
+   }, [events, query, eventType, modes]);
 
    useEffect(() => {
-      if (user) fetchEvents();
-   }, [user, query, selectedType, selectedMode]);
+      if (!filtered.some((e) => getId(e) === selectedId))
+         setSelectedId(filtered[0] ? getId(filtered[0]) : null);
+   }, [filtered, selectedId]);
+
+   const selected = filtered.find((e) => getId(e) === selectedId);
+   const isFull = (ev) => ev.seats && (ev.registrantCount || 0) >= ev.seats;
+   const regClosed = (ev) => ev.deadline && daysUntil(ev.deadline) < 0;
+   const hasFilters = query || eventType || modes.length;
+
+   const update = (id, changes) =>
+      setEvents((prev) => prev.map((e) => (getId(e) === id ? { ...e, ...changes(e) } : e)));
 
    const handleRegister = async (ev) => {
-      if (isRegistering) return;
-      setIsRegistering(true);
-      const wasRegistered = ev.isRegistered;
+      if (busy) return;
+      setBusy(true);
+      const id = getId(ev);
+      const was = ev.isRegistered;
       try {
-         if (wasRegistered) {
-            await axiosInstance.delete(API_PATHS.EVENTS.UNREGISTER(ev._id));
-         } else {
-            await axiosInstance.post(API_PATHS.EVENTS.REGISTER(ev._id));
-         }
-         const update = (e) =>
-            e._id === ev._id
-               ? {
-                    ...e,
-                    isRegistered: !wasRegistered,
-                    registrantCount:
-                       (e.registrantCount || 0) + (wasRegistered ? -1 : 1),
-                 }
-               : e;
-         setEvents((prev) => prev.map(update));
-         setSelectedEvent((prev) =>
-            prev?._id === ev._id ? update(prev) : prev,
-         );
+         if (was) await axiosInstance.delete(API_PATHS.EVENTS.UNREGISTER(id));
+         else await axiosInstance.post(API_PATHS.EVENTS.REGISTER(id));
+         update(id, (e) => ({
+            isRegistered: !was,
+            registrantCount: Math.max((e.registrantCount || 0) + (was ? -1 : 1), 0),
+         }));
       } catch {
-         // silent
+         // keep current state; the button stays available to retry
       } finally {
-         setIsRegistering(false);
+         setBusy(false);
       }
    };
 
-   const isFull = (ev) => ev.seats && (ev.registrantCount || 0) >= ev.seats;
+   const handleSave = async (ev) => {
+      const id = getId(ev);
+      const was = ev.isSaved;
+      update(id, () => ({ isSaved: !was }));
+      try {
+         if (was) await axiosInstance.delete(API_PATHS.EVENTS.UNSAVE_EVENT(id));
+         else await axiosInstance.post(API_PATHS.EVENTS.SAVE_EVENT(id));
+      } catch {
+         update(id, () => ({ isSaved: was }));
+      }
+   };
+
+   if (loading)
+      return <div className="py-20 text-center text-sm text-label">Loading events…</div>;
+
+   const organiser = selected?.organizer?.companyName || selected?.organizer?.name || "Organiser";
 
    return (
-      <div className="space-y-5">
-         {/* Filter bar */}
-         <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-outline bg-white/90 p-4 shadow-sm">
-            <div className="relative flex-1 min-w-[180px]">
-               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-icon" />
-               <input
-                  type="text"
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  placeholder="Search events…"
-                  className="w-full rounded-full border border-outline bg-white pl-9 pr-4 py-2 text-sm text-paragraph outline-none focus:border-accent focus:ring-2 focus:ring-accent/30"
-               />
-            </div>
-
-            {/* Event type filter */}
-            <div className="relative">
-               <button
-                  type="button"
-                  onClick={() => setTypeOpen((p) => !p)}
-                  className="inline-flex items-center gap-2 rounded-full border border-outline bg-white px-4 py-2 text-sm text-paragraph hover:bg-neutral"
+      <div className="space-y-4">
+         <div className="flex flex-wrap items-center gap-2">
+            <SearchBox value={query} onChange={setQuery} placeholder="Search events, organisers or topics" />
+            {EVENT_MODES.map((m) => (
+               <FilterChip
+                  key={m}
+                  active={modes.includes(m)}
+                  onClick={() =>
+                     setModes((prev) => (prev.includes(m) ? prev.filter((x) => x !== m) : [...prev, m]))
+                  }
                >
-                  <Filter className="h-4 w-4 text-icon" />
-                  {selectedType || "Event type"}
-                  {selectedType && (
-                     <span
-                        onClick={(e) => {
-                           e.stopPropagation();
-                           setSelectedType("");
-                        }}
-                        className="ml-1 cursor-pointer rounded-full bg-primary/10 px-2 py-0.5 text-xs text-primary"
-                     >
-                        ×
-                     </span>
-                  )}
-               </button>
-               {typeOpen && (
-                  <div className="absolute z-30 mt-2 w-48 rounded-xl border border-outline bg-white p-2 shadow-sm">
-                     {EVENT_TYPES.map((t) => (
-                        <button
-                           key={t.value}
-                           type="button"
-                           onClick={() => {
-                              setSelectedType(
-                                 t.value === selectedType ? "" : t.value,
-                              );
-                              setTypeOpen(false);
-                           }}
-                           className={`flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-left transition ${selectedType === t.value ? "bg-primary/10 text-primary" : "text-label hover:bg-neutral"}`}
-                        >
-                           {t.label}
-                        </button>
-                     ))}
-                  </div>
-               )}
-            </div>
-
-            {/* Mode filter */}
-            <div className="relative">
-               <button
-                  type="button"
-                  onClick={() => setModeOpen((p) => !p)}
-                  className="inline-flex items-center gap-2 rounded-full border border-outline bg-white px-4 py-2 text-sm text-paragraph hover:bg-neutral"
-               >
-                  <Filter className="h-4 w-4 text-icon" />
-                  {selectedMode || "Mode"}
-                  {selectedMode && (
-                     <span
-                        onClick={(e) => {
-                           e.stopPropagation();
-                           setSelectedMode("");
-                        }}
-                        className="ml-1 cursor-pointer rounded-full bg-primary/10 px-2 py-0.5 text-xs text-primary"
-                     >
-                        ×
-                     </span>
-                  )}
-               </button>
-               {modeOpen && (
-                  <div className="absolute z-30 mt-2 w-44 rounded-xl border border-outline bg-white p-2 shadow-sm">
-                     {eventModeOptions.map((m) => (
-                        <button
-                           key={m}
-                           type="button"
-                           onClick={() => {
-                              setSelectedMode(m === selectedMode ? "" : m);
-                              setModeOpen(false);
-                           }}
-                           className={`flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-left transition ${selectedMode === m ? "bg-primary/10 text-primary" : "text-label hover:bg-neutral"}`}
-                        >
-                           {m}
-                        </button>
-                     ))}
-                  </div>
-               )}
-            </div>
+                  {m}
+               </FilterChip>
+            ))}
+            <FilterMenu
+               label={eventType || "Event type"}
+               options={EVENT_TYPES}
+               selected={eventType}
+               multiple={false}
+               onToggle={(v) => setEventType((prev) => (prev === v ? "" : v))}
+            />
          </div>
 
-         {loading ? (
-            <div className="py-20 text-center text-sm text-label">
-               Loading events…
-            </div>
-         ) : events.length === 0 ? (
+         <ResultsLine
+            shown={filtered.length}
+            total={events.length}
+            noun={events.length === 1 ? "event" : "events"}
+            hasFilters={hasFilters}
+            onClear={() => {
+               setQuery("");
+               setEventType("");
+               setModes([]);
+            }}
+         />
+
+         {filtered.length === 0 ? (
             <EmptyState
-               title="No events found"
-               description="Check back soon for workshops, webinars, and more."
+               icon={CalendarDays}
+               title={events.length ? "No events match" : "No upcoming events yet"}
+               description={
+                  events.length
+                     ? "Try another keyword or remove a filter."
+                     : "Workshops, webinars and career fairs will appear here."
+               }
             />
          ) : (
-            <div className="grid gap-5 lg:grid-cols-[1.1fr_0.9fr]">
-               {/* Event cards */}
-               <div className="grid gap-3 sm:grid-cols-2">
-                  {events.map((ev) => {
-                     const full = isFull(ev);
-                     const isSelected = selectedEvent?._id === ev._id;
-                     return (
-                        <button
-                           key={ev._id}
-                           type="button"
-                           onClick={() => setSelectedEvent(ev)}
-                           className={`group overflow-hidden rounded-2xl border text-left transition ${
-                              isSelected
-                                 ? "border-primary bg-primary/5 shadow-sm"
-                                 : "border-outline bg-white/80 hover:border-primary/40 hover:shadow-sm"
-                           }`}
-                        >
-                           {ev.coverImage ? (
-                              <img
-                                 src={ev.coverImage}
-                                 alt={ev.title}
-                                 className="h-28 w-full object-cover"
-                              />
-                           ) : (
-                              <div className="flex h-28 w-full items-center justify-center bg-gradient-to-br from-primary/10 to-secondary/10">
-                                 <CalendarDays className="h-8 w-8 text-primary/30" />
-                              </div>
-                           )}
-
-                           <div className="p-4">
-                              <div className="flex items-start justify-between gap-2">
-                                 <span
-                                    className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${EVENT_TYPE_COLORS[ev.eventType] || "bg-neutral text-label"}`}
-                                 >
-                                    {ev.eventType}
-                                 </span>
-                                 {ev.isRegistered && (
-                                    <span className="inline-flex items-center gap-1 rounded-full bg-success/10 px-2.5 py-0.5 text-xs font-semibold text-success">
-                                       <CheckCircle2 className="h-3 w-3" />{" "}
-                                       Registered
-                                    </span>
-                                 )}
-                              </div>
-
-                              <p className="mt-2 text-sm font-semibold text-primary line-clamp-2">
-                                 {ev.title}
-                              </p>
-                              <p className="mt-1 text-xs text-label">
-                                 {ev.organizer?.companyName ||
-                                    ev.organizer?.name}
-                              </p>
-
-                              <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs text-label">
-                                 <span className="flex items-center gap-1">
-                                    <CalendarDays className="h-3.5 w-3.5" />
-                                    {formatEventDate(ev.date)}
-                                 </span>
-                                 <span className="flex items-center gap-1">
-                                    <ModeIcon mode={ev.mode} />
-                                    {ev.mode}
-                                 </span>
-                              </div>
-
-                              {full && !ev.isRegistered && (
-                                 <span className="mt-2 inline-block rounded-full bg-error/10 px-2.5 py-0.5 text-xs font-semibold text-error">
-                                    Full
-                                 </span>
-                              )}
-                           </div>
-                        </button>
-                     );
-                  })}
+            <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.95fr)]">
+               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+                  {filtered.map((ev) => (
+                     <EventCard
+                        key={getId(ev)}
+                        event={ev}
+                        selected={getId(ev) === selectedId}
+                        onClick={() => {
+                           setSelectedId(getId(ev));
+                           scrollToDetail();
+                        }}
+                     />
+                  ))}
                </div>
 
-               {/* Event detail panel */}
-               <div className="lg:sticky lg:top-28">
-                  {selectedEvent ? (
-                     <div className="overflow-hidden rounded-2xl border border-outline bg-white/90 shadow-sm">
-                        {selectedEvent.coverImage ? (
-                           <img
-                              src={selectedEvent.coverImage}
-                              alt={selectedEvent.title}
-                              className="h-44 w-full object-cover"
-                           />
-                        ) : (
-                           <div className="flex h-44 w-full items-center justify-center bg-gradient-to-br from-primary/10 to-secondary/10">
-                              <CalendarDays className="h-12 w-12 text-primary/30" />
-                           </div>
+               {selected && (
+                  <aside ref={detailRef} className="scroll-mt-20 lg:sticky lg:top-24">
+                     <div className="overflow-hidden rounded-xl border border-outline bg-white">
+                        {selected.coverImage && (
+                           <img src={selected.coverImage} alt="" className="h-40 w-full object-cover" />
                         )}
-
-                        <div className="p-5 space-y-4">
-                           <div className="flex items-start justify-between gap-3">
-                              <div>
-                                 <h3 className="text-lg font-semibold text-primary">
-                                    {selectedEvent.title}
-                                 </h3>
-                                 <p className="text-sm text-label">
-                                    {selectedEvent.organizer?.companyName ||
-                                       selectedEvent.organizer?.name}
-                                 </p>
+                        <div className="border-b border-outline p-5">
+                           <div className="flex items-start gap-4">
+                              <DateStub date={selected.date} size="lg" />
+                              <div className="min-w-0 flex-1">
+                                 <div className="flex flex-wrap gap-1.5">
+                                    {selected.eventType && <Tag>{selected.eventType}</Tag>}
+                                    {selected.isRegistered && <Tag tone="success">Registered</Tag>}
+                                 </div>
+                                 <h2 className="mt-1.5 text-lg font-semibold text-text">{selected.title}</h2>
+                                 <p className="text-sm text-label">by {organiser}</p>
                               </div>
-                              <span
-                                 className={`flex-shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ${EVENT_TYPE_COLORS[selectedEvent.eventType] || "bg-neutral text-label"}`}
-                              >
-                                 {selectedEvent.eventType}
-                              </span>
                            </div>
+                        </div>
 
-                           {/* Meta grid */}
-                           <div className="grid grid-cols-2 gap-3 rounded-xl bg-neutral/60 p-3 text-xs">
-                              <div>
-                                 <p className="font-semibold text-primary">
-                                    Date
-                                 </p>
-                                 <p className="mt-0.5 text-label">
-                                    {formatEventDate(selectedEvent.date)}
-                                 </p>
-                              </div>
-                              <div>
-                                 <p className="font-semibold text-primary">
-                                    Mode
-                                 </p>
-                                 <p className="mt-0.5 flex items-center gap-1 text-label">
-                                    <ModeIcon mode={selectedEvent.mode} />{" "}
-                                    {selectedEvent.mode}
-                                 </p>
-                              </div>
-                              {selectedEvent.location && (
-                                 <div>
-                                    <p className="font-semibold text-primary">
-                                       Location
-                                    </p>
-                                    <p className="mt-0.5 flex items-center gap-1 text-label">
-                                       <MapPin className="h-3 w-3" />{" "}
-                                       {selectedEvent.location}
-                                    </p>
-                                 </div>
-                              )}
-                              {selectedEvent.seats && (
-                                 <div>
-                                    <p className="font-semibold text-primary">
-                                       Seats
-                                    </p>
-                                    <p className="mt-0.5 flex items-center gap-1 text-label">
-                                       <Users className="h-3 w-3" />
-                                       {selectedEvent.registrantCount ||
-                                          0} / {selectedEvent.seats}
-                                    </p>
-                                 </div>
-                              )}
-                              {selectedEvent.deadline && (
-                                 <div>
-                                    <p className="font-semibold text-primary">
-                                       Register by
-                                    </p>
-                                    <p className="mt-0.5 text-label">
-                                       {new Date(
-                                          selectedEvent.deadline,
-                                       ).toLocaleDateString("en-US", {
-                                          month: "short",
-                                          day: "numeric",
-                                          year: "numeric",
-                                       })}
-                                    </p>
-                                 </div>
-                              )}
-                           </div>
+                        <div className="grid grid-cols-2 gap-x-4 border-b border-outline px-5">
+                           <DetailRow icon={CalendarDays} label="When">
+                              {formatDateTime(selected.date)}
+                           </DetailRow>
+                           <DetailRow icon={MapPin} label="Where">
+                              {selected.mode}
+                              {selected.location ? ` · ${selected.location}` : ""}
+                           </DetailRow>
+                           {selected.deadline && (
+                              <DetailRow icon={Clock} label="Register by">
+                                 {formatDate(selected.deadline)}
+                              </DetailRow>
+                           )}
+                           {selected.seats ? (
+                              <DetailRow icon={Users} label="Capacity">
+                                 <span className="tabular">{selected.seats} seats</span>
+                              </DetailRow>
+                           ) : null}
+                        </div>
 
-                           <p className="text-sm text-paragraph">
-                              {selectedEvent.description}
-                           </p>
-
-                           {selectedEvent.tags && (
-                              <div className="flex flex-wrap gap-2">
-                                 {selectedEvent.tags.split(",").map((t) => (
-                                    <span
-                                       key={t}
-                                       className="rounded-full bg-neutral px-2.5 py-0.5 text-xs text-label"
-                                    >
-                                       {t.trim()}
-                                    </span>
-                                 ))}
+                        <div className="space-y-4 p-5">
+                           {selected.seats ? (
+                              <SeatsBar seats={selected.seats} registered={selected.registrantCount || 0} />
+                           ) : null}
+                           <p className="text-sm leading-relaxed text-paragraph">{selected.description}</p>
+                           {selected.tags && (
+                              <div className="flex flex-wrap gap-1.5">
+                                 {selected.tags
+                                    .split(",")
+                                    .map((t) => t.trim())
+                                    .filter(Boolean)
+                                    .map((t) => (
+                                       <Tag key={t}>#{t}</Tag>
+                                    ))}
                               </div>
                            )}
-
-                           {selectedEvent.link && (
+                           {selected.link && selected.isRegistered && (
                               <a
-                                 href={selectedEvent.link}
+                                 href={selected.link}
                                  target="_blank"
                                  rel="noreferrer"
-                                 className="block text-sm font-semibold text-accent underline underline-offset-2"
+                                 className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
                               >
-                                 Join online →
+                                 Join link <ExternalLink className="h-3.5 w-3.5" />
                               </a>
                            )}
+                        </div>
 
-                           {!selectedEvent.isClosed && (
-                              <div className="flex items-center gap-3 border-t border-outline pt-4">
-                                 {selectedEvent.isRegistered ? (
-                                    <>
-                                       <div className="flex items-center gap-2 rounded-full bg-success/10 px-4 py-2 text-sm font-semibold text-success">
-                                          <CheckCircle2 className="h-4 w-4" />
-                                          Registered
-                                       </div>
-                                       <button
-                                          type="button"
-                                          onClick={() =>
-                                             handleRegister(selectedEvent)
-                                          }
-                                          disabled={isRegistering}
-                                          className="rounded-full border border-outline bg-white px-4 py-2 text-sm font-semibold text-label hover:bg-neutral disabled:opacity-60"
-                                       >
-                                          Cancel registration
-                                       </button>
-                                    </>
-                                 ) : isFull(selectedEvent) ? (
-                                    <span className="rounded-full bg-error/10 px-4 py-2 text-sm font-semibold text-error">
-                                       Event full
+                        {!selected.isClosed && (
+                           <div className="flex flex-wrap items-center gap-2 border-t border-outline p-5">
+                              {selected.isRegistered ? (
+                                 <>
+                                    <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-success">
+                                       <CheckCircle2 className="h-4 w-4" /> You're registered
                                     </span>
-                                 ) : (
                                     <button
                                        type="button"
-                                       onClick={() =>
-                                          handleRegister(selectedEvent)
-                                       }
-                                       disabled={isRegistering}
-                                       className="rounded-full bg-primary px-5 py-2 text-sm font-semibold text-white hover:bg-secondary disabled:opacity-60"
+                                       onClick={() => handleRegister(selected)}
+                                       disabled={busy}
+                                       className="ml-auto rounded-lg px-3 py-2 text-sm font-medium text-label hover:bg-neutral hover:text-error disabled:opacity-60"
                                     >
-                                       {isRegistering
-                                          ? "Registering…"
-                                          : "Register now"}
+                                       Cancel registration
                                     </button>
-                                 )}
-                              </div>
-                           )}
-                        </div>
+                                 </>
+                              ) : (
+                                 <>
+                                    <button
+                                       type="button"
+                                       onClick={() => handleRegister(selected)}
+                                       disabled={busy || isFull(selected) || regClosed(selected)}
+                                       className="rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-50"
+                                    >
+                                       {isFull(selected)
+                                          ? "Fully booked"
+                                          : regClosed(selected)
+                                            ? "Registration closed"
+                                            : busy
+                                              ? "Registering…"
+                                              : "Register"}
+                                    </button>
+                                    <button
+                                       type="button"
+                                       onClick={() => handleSave(selected)}
+                                       className="inline-flex items-center gap-2 rounded-lg border border-outline bg-white px-4 py-2.5 text-sm font-semibold text-text transition-colors hover:border-primary/40"
+                                    >
+                                       {selected.isSaved ? (
+                                          <BookmarkCheck className="h-4 w-4 text-primary" />
+                                       ) : (
+                                          <Bookmark className="h-4 w-4" />
+                                       )}
+                                       {selected.isSaved ? "Saved" : "Save"}
+                                    </button>
+                                    {selected.deadline && (
+                                       <span className="ml-auto">
+                                          <DeadlineHint deadline={selected.deadline} label="Register by" />
+                                       </span>
+                                    )}
+                                 </>
+                              )}
+                           </div>
+                        )}
                      </div>
-                  ) : (
-                     <EmptyState
-                        title="Select an event"
-                        description="Choose an event to see full details here."
-                     />
-                  )}
-               </div>
+                  </aside>
+               )}
             </div>
          )}
       </div>
@@ -947,56 +805,104 @@ const EventsTab = ({ user }) => {
 };
 
 // ─────────────────────────────────────────────
-// MAIN DASHBOARD
+// PAGE
 // ─────────────────────────────────────────────
 const ApplicantsDashboard = () => {
    const { user, updateUser } = useAuth();
-   const [activeTab, setActiveTab] = useState("jobs");
+   const location = useLocation();
+   const navigate = useNavigate();
 
+   // /events opens the Events tab; /find-jobs (and others) open Internships
+   const activeTab = location.pathname.toLowerCase().startsWith("/events") ? "events" : "jobs";
+   const setTab = (tab) => navigate(tab === "events" ? "/events" : "/find-jobs", { replace: true });
+
+   const [jobs, setJobs] = useState([]);
+   const [events, setEvents] = useState([]);
+   const [registrations, setRegistrations] = useState([]);
+   const [loadingEvents, setLoadingEvents] = useState(true);
+
+   useEffect(() => {
+      if (!user) return;
+      const userId = user._id || user.id;
+      axiosInstance
+         .get(API_PATHS.JOBS.GET_ALL_JOBS, { params: { userId } })
+         .then((res) =>
+            setJobs((res.data || []).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))),
+         )
+         .catch(() => setJobs([]));
+      axiosInstance
+         .get(API_PATHS.EVENTS.GET_ALL_EVENTS, { params: { userId } })
+         .then((res) =>
+            setEvents(
+               (res.data || [])
+                  .filter((ev) => daysUntil(ev.endDate || ev.date) >= 0)
+                  .sort((a, b) => new Date(a.date) - new Date(b.date)),
+            ),
+         )
+         .catch(() => setEvents([]))
+         .finally(() => setLoadingEvents(false));
+      axiosInstance
+         .get(API_PATHS.EVENTS.GET_MY_REGISTRATIONS)
+         .then((res) => setRegistrations(res.data || []))
+         .catch(() => setRegistrations([]));
+   }, [user]);
+
+   // Keep "Coming up" in sync when the student registers/unregisters here
+   const registeredHere = events.filter((e) => e.isRegistered).map((event) => ({ event }));
+   const comingUpRegs = events.length ? registeredHere : registrations;
+
+   const firstName = (user?.name || "").split(" ")[0];
    const tabs = [
-      { id: "jobs", label: "Internships" },
-      { id: "events", label: "Events" },
+      { id: "jobs", label: "Internships", count: jobs.length },
+      { id: "events", label: "Events", count: events.length },
    ];
 
    return (
-      <DashboardLayout
-         activeMenu="find-jobs"
-         navItems={NAVIGATION_MENU_APPLICANT}
-      >
+      <DashboardLayout activeMenu="find-jobs" navItems={NAVIGATION_MENU_APPLICANT}>
          <div className="space-y-6">
             <div>
-               <h1 className="text-2xl font-semibold text-primary">
-                  {activeTab === "jobs" ? "Find internships" : "Explore events"}
-               </h1>
+               <p className="text-sm text-label">{firstName ? `Hi ${firstName},` : "Welcome,"}</p>
+               <h1 className="text-2xl font-semibold text-text md:text-3xl">Find opportunities</h1>
                <p className="mt-1 text-sm text-label">
-                  {activeTab === "jobs"
-                     ? "Browse open roles and apply directly."
-                     : "Discover workshops, webinars, and career events near you."}
+                  Internships to apply for and career events to grow your network.
                </p>
             </div>
 
-            {/* Tab switcher */}
-            <div className="flex gap-1 rounded-xl border border-outline bg-white/90 p-1 w-fit shadow-sm">
-               {tabs.map((tab) => (
-                  <button
-                     key={tab.id}
-                     type="button"
-                     onClick={() => setActiveTab(tab.id)}
-                     className={`rounded-lg px-5 py-2 text-sm font-semibold transition ${
-                        activeTab === tab.id
-                           ? "bg-primary text-white shadow-sm"
-                           : "text-label hover:text-primary"
-                     }`}
-                  >
-                     {tab.label}
-                  </button>
-               ))}
+            <ComingUp jobs={jobs} registrations={comingUpRegs} onOpenTab={setTab} />
+
+            <div className="border-b border-outline" role="tablist" aria-label="Opportunity type">
+               <div className="flex gap-6">
+                  {tabs.map((tab) => {
+                     const isActive = activeTab === tab.id;
+                     return (
+                        <button
+                           key={tab.id}
+                           type="button"
+                           role="tab"
+                           aria-selected={isActive}
+                           onClick={() => setTab(tab.id)}
+                           className={`-mb-px flex items-center gap-2 border-b-2 pb-3 text-sm font-semibold transition-colors ${
+                              isActive
+                                 ? "border-primary text-text"
+                                 : "border-transparent text-label hover:text-text"
+                           }`}
+                        >
+                           {tab.label}
+                           <span
+                              className={`tabular rounded-md px-1.5 py-0.5 text-xs ${isActive ? "bg-primary text-white" : "bg-neutral text-label"}`}
+                           >
+                              {tab.count}
+                           </span>
+                        </button>
+                     );
+                  })}
+               </div>
             </div>
 
             {activeTab === "jobs" ? (
-               <JobsTab user={user} updateUser={updateUser} />
+               <JobsTab jobs={jobs} setJobs={setJobs} user={user} updateUser={updateUser} />
             ) : (
-               <EventsTab user={user} />
+               <EventsTab events={events} setEvents={setEvents} loading={loadingEvents} />
             )}
          </div>
       </DashboardLayout>

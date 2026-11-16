@@ -80,7 +80,18 @@ export const getOrganizationAnalytics = async (req, res) => {
       const recentJobs = await Job.find({ company: companyId })
          .sort({ createdAt: -1 })
          .limit(5)
-         .select("title location type createdAt isClosed");
+         .select("title location workMode deadline createdAt isClosed")
+         .lean();
+
+      // Applicant count for each of those roles
+      const perJob = await Application.aggregate([
+         { $match: { job: { $in: recentJobs.map((j) => j._id) } } },
+         { $group: { _id: "$job", count: { $sum: 1 } } },
+      ]);
+      const countByJob = Object.fromEntries(perJob.map((c) => [String(c._id), c.count]));
+      recentJobs.forEach((j) => {
+         j.applicantCount = countByJob[String(j._id)] || 0;
+      });
 
       const recentApplication = await Application.find({
          job: { $in: jobIds },

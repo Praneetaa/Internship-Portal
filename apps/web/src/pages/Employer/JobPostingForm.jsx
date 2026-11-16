@@ -24,9 +24,9 @@ const defaultForm = {
 };
 
 const Section = ({ title, subtitle, children }) => (
-   <div className="rounded-2xl border border-outline bg-white/90 p-6 shadow-sm">
+   <div className="rounded-xl border border-outline bg-white p-6">
       <div className="mb-4">
-         <h2 className="text-base font-semibold text-primary">{title}</h2>
+         <h2 className="text-base font-semibold text-text">{title}</h2>
          {subtitle && <p className="mt-0.5 text-xs text-label">{subtitle}</p>}
       </div>
       {children}
@@ -139,7 +139,7 @@ const JobPostingForm = () => {
             {/* Header */}
             <div className="flex flex-wrap items-start justify-between gap-4">
                <div>
-                  <h1 className="text-2xl font-bold text-primary">
+                  <h1 className="text-2xl font-semibold text-text">
                      {editingJobId ? "Edit internship" : "Post an internship"}
                   </h1>
                   <p className="mt-1 text-sm text-label">
@@ -149,7 +149,7 @@ const JobPostingForm = () => {
                </div>
                <Link
                   to="/manage-jobs"
-                  className="rounded-full border border-outline bg-white px-4 py-2 text-sm font-semibold text-primary hover:bg-neutral transition"
+                  className="rounded-lg border border-outline bg-white px-4 py-2 text-sm font-semibold text-primary hover:bg-neutral transition"
                >
                   ← Manage jobs
                </Link>
@@ -278,7 +278,7 @@ const JobPostingForm = () => {
                   <button
                      type="submit"
                      disabled={isSubmitting}
-                     className="rounded-full bg-primary px-6 py-2.5 text-sm font-semibold text-white hover:bg-secondary transition disabled:opacity-60"
+                     className="rounded-lg bg-primary px-6 py-2.5 text-sm font-semibold text-white hover:bg-secondary transition disabled:opacity-60"
                   >
                      {isSubmitting
                         ? "Saving…"
@@ -292,7 +292,7 @@ const JobPostingForm = () => {
                         setFormData(defaultForm);
                         setStatusMessage("");
                      }}
-                     className="rounded-full border border-outline bg-white px-6 py-2.5 text-sm font-semibold text-primary hover:bg-neutral transition"
+                     className="rounded-lg border border-outline bg-white px-6 py-2.5 text-sm font-semibold text-primary hover:bg-neutral transition"
                   >
                      Reset form
                   </button>

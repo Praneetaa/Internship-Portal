@@ -1,4 +1,6 @@
 import { useState } from "react";
+import AuthBrandPanel from "../../components/brand/AuthBrandPanel";
+import BeaconnLogo from "../../components/brand/BeaconnLogo";
 import { Link, useNavigate } from "react-router-dom";
 import {
    Eye,
@@ -8,8 +10,6 @@ import {
    AlertCircle,
    Upload,
    Loader,
-   Briefcase,
-   CheckCircle2,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import toast from "react-hot-toast";
@@ -220,43 +220,15 @@ const Signup = () => {
    return (
       <div className="flex min-h-screen bg-neutral">
          {/* Left panel */}
-         <div className="hidden lg:flex lg:w-[40%] flex-col justify-between bg-primary p-12 relative overflow-hidden">
-            <div className="absolute inset-0 opacity-10">
-               <div className="absolute top-20 left-10 w-64 h-64 rounded-full border-2 border-white" />
-               <div className="absolute bottom-20 right-10 w-96 h-96 rounded-full border border-white" />
-            </div>
-            <Link to="/" className="relative flex items-center gap-3">
-               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/20">
-                  <Briefcase className="h-5 w-5 text-white" />
-               </div>
-               <span className="text-xl font-bold text-white">Beaconn</span>
-            </Link>
-            <div className="relative space-y-5">
-               <h2 className="text-4xl font-bold text-white leading-tight">
-                  Start your journey today.
-               </h2>
-               <p className="text-white/70 text-base">
-                  Build your profile once, apply to internships and events that
-                  match where you're headed.
-               </p>
-               <div className="space-y-3 pt-2">
-                  {[
-                     "Free to join — no hidden fees",
-                     "Internship-focused listings only",
-                     "Track applications in one place",
-                     "Get discovered by top organizations",
-                  ].map((item) => (
-                     <div key={item} className="flex items-center gap-3">
-                        <CheckCircle2 className="h-5 w-5 text-white/60 flex-shrink-0" />
-                        <span className="text-sm text-white/80">{item}</span>
-                     </div>
-                  ))}
-               </div>
-            </div>
-            <p className="relative text-sm text-white/40">
-               © 2026 Beaconn. All rights reserved.
-            </p>
-         </div>
+         <AuthBrandPanel
+            title="Start your journey today."
+            text="Create a free account to apply for internships and register for career events."
+            points={[
+               "Free to join",
+               "Internships and career events in one place",
+               "Track every application from your dashboard",
+            ]}
+         />
 
          {/* Right form */}
          <div className="flex flex-1 flex-col items-center justify-center px-6 py-12 overflow-y-auto">
@@ -266,17 +238,12 @@ const Signup = () => {
                transition={{ duration: 0.5, ease: "easeOut" }}
                className="w-full max-w-md"
             >
-               <Link to="/" className="lg:hidden flex items-center gap-2 mb-8">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-                     <Briefcase className="h-4 w-4 text-white" />
-                  </div>
-                  <span className="text-lg font-bold text-primary">
-                     Beaconn
-                  </span>
+               <Link to="/" className="mb-8 inline-flex lg:hidden" aria-label="Beaconn home">
+                  <BeaconnLogo />
                </Link>
 
                <div className="mb-8">
-                  <h1 className="text-3xl font-bold text-primary">
+                  <h1 className="text-3xl font-semibold text-text">
                      Create your account
                   </h1>
                   <p className="mt-2 text-sm text-label">

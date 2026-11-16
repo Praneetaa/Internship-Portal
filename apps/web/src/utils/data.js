@@ -13,6 +13,10 @@ import {
    Plus,
    Users,
    Heart,
+   Bookmark,
+   CalendarDays,
+   CalendarPlus,
+   CalendarCheck,
 } from "lucide-react";
 
 export const candidateFeatures = [
@@ -64,20 +68,23 @@ export const employerFeatures = [
    },
 ];
 
-//Navigation items configuration
+//Navigation items configuration (grouped into labelled sections in the sidebar)
 export const NAVIGATION_MENU = [
-   { id: "organization-dashboard", name: "Dashboard", icon: LayoutDashboard },
-   { id: "post-job", name: "Post Job", icon: Plus },
-   { id: "manage-jobs", name: "Manage Jobs", icon: Briefcase },
-   { id: "applications", name: "Applications", icon: FileText },
-   { id: "company-profile", name: "Company Profile", icon: Building2 },
+   { id: "organization-dashboard", name: "Dashboard", icon: LayoutDashboard, section: "Overview" },
+   { id: "post-job", name: "Post internship", icon: Plus, section: "Internships" },
+   { id: "manage-jobs", name: "Manage internships", icon: Briefcase, section: "Internships" },
+   { id: "applications", name: "Applications", icon: FileText, section: "Internships" },
+   { id: "post-event", name: "Post event", icon: CalendarPlus, section: "Events" },
+   { id: "manage-events", name: "Manage events", icon: CalendarDays, section: "Events" },
+   { id: "company-profile", name: "Company profile", icon: Building2, section: "Company" },
 ];
 
 export const NAVIGATION_MENU_APPLICANT = [
-   { id: "find-jobs", name: "Find Internships", icon: Search },
-   { id: "saved-jobs", name: "Saved Jobs", icon: Heart },
-   { id: "my-applications", name: "My Applications", icon: FileText },
-   { id: "candidate-profile", name: "Profile", icon: User },
+   { id: "find-jobs", name: "Find opportunities", icon: Search, section: "Discover" },
+   { id: "saved-jobs", name: "Saved", icon: Bookmark, section: "My activity" },
+   { id: "my-applications", name: "My applications", icon: FileText, section: "My activity" },
+   { id: "my-events", name: "My events", icon: CalendarCheck, section: "My activity" },
+   { id: "candidate-profile", name: "Profile", icon: User, section: "Account" },
 ];
 
 //Categories and job types

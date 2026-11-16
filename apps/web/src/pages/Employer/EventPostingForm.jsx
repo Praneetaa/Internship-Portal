@@ -176,7 +176,7 @@ const EventPostingForm = () => {
          <div className="space-y-6">
             <div className="flex flex-wrap items-start justify-between gap-4">
                <div>
-                  <h1 className="text-2xl font-semibold text-primary">
+                  <h1 className="text-2xl font-semibold text-text">
                      {editingEventId ? "Edit event" : "Post an event"}
                   </h1>
                   <p className="mt-1 text-sm text-label">
@@ -186,7 +186,7 @@ const EventPostingForm = () => {
                </div>
                <Link
                   to="/manage-events"
-                  className="rounded-full border border-outline bg-white px-4 py-2 text-sm font-semibold text-primary hover:bg-neutral"
+                  className="rounded-lg border border-outline bg-white px-4 py-2 text-sm font-semibold text-primary hover:bg-neutral"
                >
                   Manage events
                </Link>
@@ -223,7 +223,7 @@ const EventPostingForm = () => {
                         <button
                            type="button"
                            onClick={removeCoverImage}
-                           className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 shadow hover:bg-white"
+                           className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-white shadow hover:bg-white"
                         >
                            <X className="h-4 w-4 text-primary" />
                         </button>
@@ -235,7 +235,7 @@ const EventPostingForm = () => {
                         disabled={imageUploading}
                         className="flex w-full flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-outline bg-neutral py-10 transition hover:border-primary/50 hover:bg-primary/5 disabled:opacity-60"
                      >
-                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10">
                            <ImagePlus className="h-6 w-6 text-primary" />
                         </div>
                         <div className="text-center">
@@ -369,7 +369,7 @@ const EventPostingForm = () => {
                   <button
                      type="submit"
                      disabled={isSubmitting || imageUploading}
-                     className="rounded-full bg-primary px-6 py-2 text-sm font-semibold text-white hover:bg-secondary disabled:opacity-60"
+                     className="rounded-lg bg-primary px-6 py-2 text-sm font-semibold text-white hover:bg-secondary disabled:opacity-60"
                   >
                      {isSubmitting
                         ? "Saving…"
@@ -383,7 +383,7 @@ const EventPostingForm = () => {
                         setFormData(defaultForm);
                         setImagePreview("");
                      }}
-                     className="rounded-full border border-outline bg-white px-6 py-2 text-sm font-semibold text-primary hover:bg-neutral"
+                     className="rounded-lg border border-outline bg-white px-6 py-2 text-sm font-semibold text-primary hover:bg-neutral"
                   >
                      Reset form
                   </button>

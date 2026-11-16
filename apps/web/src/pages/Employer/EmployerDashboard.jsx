@@ -24,61 +24,6 @@ const EVENT_TYPE_COLORS = {
    Other: "bg-neutral text-label",
 };
 
-const fallbackOverview = {
-   stats: [
-      { label: "Active Internships", value: "12", change: "+3 this week" },
-      { label: "Applications", value: "248", change: "+18 today" },
-      { label: "Shortlisted", value: "34", change: "+6 this week" },
-      { label: "Interviews", value: "9", change: "+2 this week" },
-   ],
-   recentApplications: [
-      {
-         id: "app-1",
-         name: "Aisha Khan",
-         role: "Product Design Intern",
-         status: "In Review",
-         time: "2 hours ago",
-      },
-      {
-         id: "app-2",
-         name: "Rahul Sen",
-         role: "Marketing Intern",
-         status: "Applied",
-         time: "5 hours ago",
-      },
-      {
-         id: "app-3",
-         name: "Yara Solis",
-         role: "Software Intern",
-         status: "In Review",
-         time: "1 day ago",
-      },
-   ],
-   activeRoles: [
-      {
-         id: "job-1",
-         title: "Frontend Intern",
-         applicants: 42,
-         status: "Open",
-         deadline: "Apr 22, 2026",
-      },
-      {
-         id: "job-2",
-         title: "Data Analyst Intern",
-         applicants: 27,
-         status: "Open",
-         deadline: "Apr 28, 2026",
-      },
-      {
-         id: "job-3",
-         title: "UX Research Intern",
-         applicants: 16,
-         status: "Closed",
-         deadline: "May 02, 2026",
-      },
-   ],
-};
-
 const formatEventDate = (dateStr) => {
    if (!dateStr) return "—";
    return new Date(dateStr).toLocaleDateString("en-US", {
@@ -88,21 +33,70 @@ const formatEventDate = (dateStr) => {
    });
 };
 
+// Shape the analytics API response for the dashboard widgets.
+const EMPTY_OVERVIEW = { stats: null, recentApplications: [], activeRoles: [] };
+
+const trendText = (pct) =>
+   pct ? `${pct > 0 ? "+" : ""}${pct}% vs last week` : undefined;
+
+const timeAgo = (value) => {
+   if (!value) return "";
+   const mins = Math.round((Date.now() - new Date(value).getTime()) / 60000);
+   if (mins < 1) return "just now";
+   if (mins < 60) return `${mins} min ago`;
+   const hours = Math.round(mins / 60);
+   if (hours < 24) return `${hours} h ago`;
+   const days = Math.round(hours / 24);
+   return days === 1 ? "yesterday" : `${days} days ago`;
+};
+
+const toOverview = (api) => {
+   const counts = api?.counts || {};
+   const trends = counts.trends || {};
+   const data = api?.data || {};
+   return {
+      stats: [
+         { label: "Active internships", value: counts.totalActiveJobs ?? 0, change: trendText(trends.activeJobs) },
+         { label: "Applications", value: counts.totalApplications ?? 0, change: trendText(trends.totalApplication) },
+         { label: "Hired", value: counts.totalHired ?? 0, change: trendText(trends.totalHired) },
+      ],
+      recentApplications: (data.recentApplication || []).map((a) => ({
+         id: a._id,
+         name: a.applicant?.name || "Applicant",
+         role: a.job?.title || "Internship",
+         status: a.status,
+         time: timeAgo(a.createdAt),
+         createdAt: a.createdAt,
+      })),
+      activeRoles: (data.recentJobs || []).map((j) => ({
+         id: j._id,
+         title: j.title,
+         applicants: j.applicantCount || 0,
+         status: j.isClosed ? "Closed" : "Open",
+         deadline: j.deadline ? formatEventDate(j.deadline) : "No deadline",
+         createdAt: j.createdAt,
+      })),
+   };
+};
+
+
+
 const EmployerDashboard = () => {
-   const [dashboardData, setDashboardData] = useState(fallbackOverview);
+   const [dashboardData, setDashboardData] = useState(EMPTY_OVERVIEW);
    const [isLoading, setIsLoading] = useState(false);
    const [events, setEvents] = useState([]);
    const [eventsLoading, setEventsLoading] = useState(true);
+   const [eventsTotal, setEventsTotal] = useState(0);
 
    const getDashboardOverView = async () => {
       try {
          setIsLoading(true);
          const response = await axiosInstance.get(API_PATHS.DASHBOARD.OVERVIEW);
          if (response.status === 200 && response.data) {
-            setDashboardData({ ...fallbackOverview, ...response.data });
+            setDashboardData(toOverview(response.data));
          }
       } catch {
-         setDashboardData(fallbackOverview);
+         setDashboardData({ ...EMPTY_OVERVIEW, stats: [] });
       } finally {
          setIsLoading(false);
       }
@@ -114,6 +108,7 @@ const EmployerDashboard = () => {
          const res = await axiosInstance.get(
             API_PATHS.EVENTS.GET_MY_EVENTS_ORG,
          );
+         setEventsTotal((res.data || []).filter((e) => !e.isClosed && new Date(e.endDate || e.date) >= new Date()).length);
          setEvents((res.data || []).slice(0, 3));
       } catch {
          setEvents([]);
@@ -145,7 +140,7 @@ const EmployerDashboard = () => {
             {/* Page header */}
             <div className="flex flex-wrap items-start justify-between gap-4">
                <div>
-                  <h1 className="text-2xl font-semibold text-primary">
+                  <h1 className="text-2xl font-semibold text-text">
                      Employer dashboard
                   </h1>
                   <p className="mt-1 text-sm text-label">
@@ -155,21 +150,21 @@ const EmployerDashboard = () => {
                <div className="flex flex-wrap gap-3">
                   <Link
                      to="/post-job"
-                     className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-secondary"
+                     className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-secondary"
                   >
                      <Briefcase className="h-4 w-4" />
                      Post internship
                   </Link>
                   <Link
                      to="/post-event"
-                     className="inline-flex items-center gap-2 rounded-full border border-primary bg-white px-4 py-2 text-sm font-semibold text-primary hover:bg-primary/5"
+                     className="inline-flex items-center gap-2 rounded-lg border border-outline bg-white px-4 py-2 text-sm font-semibold text-text hover:border-primary/40"
                   >
                      <CalendarDays className="h-4 w-4" />
                      Post event
                   </Link>
                   <Link
                      to="/applications"
-                     className="inline-flex items-center gap-2 rounded-full border border-outline bg-white px-4 py-2 text-sm font-semibold text-primary hover:bg-neutral"
+                     className="inline-flex items-center gap-2 rounded-lg border border-outline bg-white px-4 py-2 text-sm font-semibold text-primary hover:bg-neutral"
                   >
                      Manage applicants
                   </Link>
@@ -178,7 +173,10 @@ const EmployerDashboard = () => {
 
             {/* Stats */}
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-               {(dashboardData?.stats || fallbackOverview.stats).map((stat) => (
+               {(dashboardData?.stats
+                  ? [...dashboardData.stats, { label: "Upcoming events", value: eventsTotal }]
+                  : ["Active internships", "Applications", "Hired", "Upcoming events"].map((label) => ({ label, value: "—" }))
+               ).map((stat) => (
                   <StatCard
                      key={stat.label}
                      label={stat.label}
@@ -206,7 +204,7 @@ const EmployerDashboard = () => {
                      {recentApplications.map((app) => (
                         <div
                            key={app.id}
-                           className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-outline bg-white/70 p-4"
+                           className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-outline bg-white p-4"
                         >
                            <div>
                               <p className="text-sm font-semibold text-primary">
@@ -234,7 +232,7 @@ const EmployerDashboard = () => {
                      {activeRoles.map((role) => (
                         <div
                            key={role.id}
-                           className="rounded-xl border border-outline bg-white/70 p-4"
+                           className="rounded-xl border border-outline bg-white p-4"
                         >
                            <div className="flex items-start justify-between gap-3">
                               <div>
@@ -250,7 +248,7 @@ const EmployerDashboard = () => {
                            <div className="mt-3 flex items-center justify-between text-xs text-label">
                               <span>
                                  <Users className="mr-1 inline h-3 w-3" />
-                                 {role.applicants} applicants
+                                 {role.applicants} {role.applicants === 1 ? "applicant" : "applicants"}
                               </span>
                               <Link to="/applications" className="text-primary">
                                  Review
@@ -276,7 +274,7 @@ const EmployerDashboard = () => {
                      </Link>
                      <Link
                         to="/post-event"
-                        className="inline-flex items-center gap-1.5 rounded-full bg-primary px-3 py-1.5 text-xs font-semibold text-white hover:bg-secondary"
+                        className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-white hover:bg-secondary"
                      >
                         <Plus className="h-3.5 w-3.5" />
                         New event
@@ -290,7 +288,7 @@ const EmployerDashboard = () => {
                   </p>
                ) : events.length === 0 ? (
                   <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-outline py-10 text-center">
-                     <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+                     <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10">
                         <CalendarDays className="h-6 w-6 text-primary" />
                      </div>
                      <div>
@@ -304,7 +302,7 @@ const EmployerDashboard = () => {
                      </div>
                      <Link
                         to="/post-event"
-                        className="mt-1 inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-secondary"
+                        className="mt-1 inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-secondary"
                      >
                         <Plus className="h-4 w-4" />
                         Post your first event
@@ -315,7 +313,7 @@ const EmployerDashboard = () => {
                      {events.map((ev) => (
                         <div
                            key={ev._id}
-                           className="overflow-hidden rounded-xl border border-outline bg-white/70"
+                           className="overflow-hidden rounded-xl border border-outline bg-white"
                         >
                            {ev.coverImage ? (
                               <img
@@ -324,7 +322,7 @@ const EmployerDashboard = () => {
                                  className="h-28 w-full object-cover"
                               />
                            ) : (
-                              <div className="flex h-28 w-full items-center justify-center bg-gradient-to-br from-primary/10 to-secondary/10">
+                              <div className="flex h-28 w-full items-center justify-center bg-neutral">
                                  <CalendarDays className="h-8 w-8 text-primary/30" />
                               </div>
                            )}
@@ -355,13 +353,13 @@ const EmployerDashboard = () => {
                               <div className="mt-3 flex gap-2">
                                  <Link
                                     to={`/post-event?eventId=${ev._id}`}
-                                    className="flex-1 rounded-full border border-outline bg-white py-1 text-center text-xs font-semibold text-primary hover:bg-neutral"
+                                    className="flex-1 rounded-lg border border-outline bg-white py-1 text-center text-xs font-semibold text-primary hover:bg-neutral"
                                  >
                                     Edit
                                  </Link>
                                  <Link
                                     to="/manage-events"
-                                    className="flex-1 rounded-full border border-outline bg-white py-1 text-center text-xs font-semibold text-primary hover:bg-neutral"
+                                    className="flex-1 rounded-lg border border-outline bg-white py-1 text-center text-xs font-semibold text-primary hover:bg-neutral"
                                  >
                                     Manage
                                  </Link>
@@ -379,11 +377,11 @@ const EmployerDashboard = () => {
                subtitle="Quick look at internship engagement this month."
             >
                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                  <div className="rounded-xl border border-outline bg-white/70 p-4">
+                  <div className="rounded-xl border border-outline bg-white p-4">
                      <p className="text-xs uppercase tracking-[0.2em] text-label">
                         Views
                      </p>
-                     <p className="mt-2 text-2xl font-semibold text-primary">
+                     <p className="mt-2 text-2xl font-semibold text-text">
                         4,280
                      </p>
                      <p className="mt-1 text-xs text-label">
@@ -391,22 +389,22 @@ const EmployerDashboard = () => {
                         12% higher than last month
                      </p>
                   </div>
-                  <div className="rounded-xl border border-outline bg-white/70 p-4">
+                  <div className="rounded-xl border border-outline bg-white p-4">
                      <p className="text-xs uppercase tracking-[0.2em] text-label">
                         Conversion
                      </p>
-                     <p className="mt-2 text-2xl font-semibold text-primary">
+                     <p className="mt-2 text-2xl font-semibold text-text">
                         5.6%
                      </p>
                      <p className="mt-1 text-xs text-label">
                         from view to application
                      </p>
                   </div>
-                  <div className="rounded-xl border border-outline bg-white/70 p-4">
+                  <div className="rounded-xl border border-outline bg-white p-4">
                      <p className="text-xs uppercase tracking-[0.2em] text-label">
                         Response time
                      </p>
-                     <p className="mt-2 text-2xl font-semibold text-primary">
+                     <p className="mt-2 text-2xl font-semibold text-text">
                         14 hrs
                      </p>
                      <p className="mt-1 text-xs text-label">

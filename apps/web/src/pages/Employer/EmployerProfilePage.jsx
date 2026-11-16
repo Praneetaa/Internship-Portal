@@ -42,7 +42,7 @@ const EmployerProfilePage = () => {
          <div className="space-y-6">
             <div className="flex flex-wrap items-start justify-between gap-4">
                <div>
-                  <h1 className="text-2xl font-bold text-primary">
+                  <h1 className="text-2xl font-semibold text-text">
                      Company profile
                   </h1>
                   <p className="mt-1 text-sm text-label">
@@ -51,18 +51,18 @@ const EmployerProfilePage = () => {
                </div>
                <Link
                   to="/edit-profile"
-                  className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-secondary transition"
+                  className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-secondary transition"
                >
                   <Pencil className="h-4 w-4" /> Edit profile
                </Link>
             </div>
 
             {/* Profile hero */}
-            <div className="overflow-hidden rounded-2xl border border-outline bg-white/90 shadow-sm">
-               <div className="h-28 bg-gradient-to-r from-primary to-secondary" />
+            <div className="overflow-hidden rounded-xl border border-outline bg-white">
+               <div className="h-28 bg-primary" />
                <div className="px-6 pb-6">
                   <div className="-mt-10 flex items-end justify-between gap-4">
-                     <div className="h-20 w-20 overflow-hidden rounded-2xl border-4 border-white bg-white shadow-sm flex items-center justify-center">
+                     <div className="h-20 w-20 overflow-hidden rounded-xl border-4 border-white bg-white flex items-center justify-center">
                         {logo ? (
                            <img
                               src={logo}
@@ -70,7 +70,7 @@ const EmployerProfilePage = () => {
                               className="h-full w-full object-cover"
                            />
                         ) : (
-                           <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary/15 to-secondary/15 text-2xl font-bold text-primary">
+                           <div className="flex h-full w-full items-center justify-center bg-primary/[0.07] ring-1 ring-inset ring-primary/10 text-2xl font-semibold text-text">
                               {companyName[0].toUpperCase()}
                            </div>
                         )}
@@ -83,7 +83,7 @@ const EmployerProfilePage = () => {
                      </Link>
                   </div>
                   <div className="mt-3">
-                     <h2 className="text-xl font-bold text-primary">
+                     <h2 className="text-xl font-semibold text-text">
                         {companyName}
                      </h2>
                      <p className="text-sm text-label mt-0.5">
@@ -98,7 +98,7 @@ const EmployerProfilePage = () => {
                {infoItems.map(({ icon: Icon, label, value }) => (
                   <div
                      key={label}
-                     className="rounded-2xl border border-outline bg-white/90 p-4 shadow-sm"
+                     className="rounded-xl border border-outline bg-white p-4"
                   >
                      <div className="flex items-center gap-2 mb-2">
                         <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10">
@@ -118,8 +118,8 @@ const EmployerProfilePage = () => {
             </div>
 
             {/* About */}
-            <div className="rounded-2xl border border-outline bg-white/90 p-6 shadow-sm">
-               <h3 className="text-base font-semibold text-primary mb-3">
+            <div className="rounded-xl border border-outline bg-white p-6">
+               <h3 className="text-base font-semibold text-text mb-3">
                   About the company
                </h3>
                <p

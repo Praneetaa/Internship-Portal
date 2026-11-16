@@ -7,8 +7,9 @@ import {
    EyeOff,
    Loader,
    AlertCircle,
-   Briefcase,
 } from "lucide-react";
+import AuthBrandPanel from "../../components/brand/AuthBrandPanel";
+import BeaconnLogo from "../../components/brand/BeaconnLogo";
 import { Link, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import axiosInstance from "../../utils/axiosInstances";
@@ -82,48 +83,7 @@ const Login = () => {
 
    return (
       <div className="flex min-h-screen bg-neutral">
-         {/* Left decorative panel */}
-         <div className="hidden lg:flex lg:w-[45%] flex-col justify-between bg-primary p-12 relative overflow-hidden">
-            <div className="absolute inset-0 opacity-10">
-               <div className="absolute top-20 left-10 w-64 h-64 rounded-full border-2 border-white" />
-               <div className="absolute bottom-20 right-10 w-96 h-96 rounded-full border border-white" />
-               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 rounded-full border border-white" />
-            </div>
-            <Link to="/" className="relative flex items-center gap-3">
-               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/20 backdrop-blur">
-                  <Briefcase className="h-5 w-5 text-white" />
-               </div>
-               <span className="text-xl font-bold text-white">Beaconn</span>
-            </Link>
-            <div className="relative space-y-6">
-               <h2 className="text-4xl font-bold text-white leading-tight">
-                  Your next internship starts here.
-               </h2>
-               <p className="text-white/70 text-base leading-relaxed">
-                  Join thousands of candidates discovering internships and
-                  career events tailored for early talent.
-               </p>
-               <div className="grid grid-cols-2 gap-4 pt-4">
-                  {[
-                     ["200+", "Open roles"],
-                     ["3k+", "Candidates"],
-                     ["60+", "Partner orgs"],
-                     ["92%", "Match rate"],
-                  ].map(([val, label]) => (
-                     <div
-                        key={label}
-                        className="rounded-2xl border border-white/20 bg-white/10 p-4 backdrop-blur"
-                     >
-                        <p className="text-2xl font-bold text-white">{val}</p>
-                        <p className="text-sm text-white/60 mt-0.5">{label}</p>
-                     </div>
-                  ))}
-               </div>
-            </div>
-            <p className="relative text-sm text-white/40">
-               © 2026 Beaconn. All rights reserved.
-            </p>
-         </div>
+         <AuthBrandPanel />
 
          {/* Right form panel */}
          <div className="flex flex-1 flex-col items-center justify-center px-6 py-12">
@@ -134,17 +94,12 @@ const Login = () => {
                className="w-full max-w-md"
             >
                {/* Mobile logo */}
-               <Link to="/" className="lg:hidden flex items-center gap-2 mb-8">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-                     <Briefcase className="h-4 w-4 text-white" />
-                  </div>
-                  <span className="text-lg font-bold text-primary">
-                     Beaconn
-                  </span>
+               <Link to="/" className="mb-8 inline-flex lg:hidden" aria-label="Beaconn home">
+                  <BeaconnLogo />
                </Link>
 
                <div className="mb-8">
-                  <h1 className="text-3xl font-bold text-primary">
+                  <h1 className="text-3xl font-semibold text-text">
                      Welcome back
                   </h1>
                   <p className="mt-2 text-sm text-label">
@@ -156,7 +111,7 @@ const Login = () => {
                   <div className="space-y-1.5">
                      <label
                         htmlFor="email"
-                        className="block text-sm font-semibold text-primary"
+                        className="block text-sm font-medium text-text"
                      >
                         Email address
                      </label>
@@ -183,7 +138,7 @@ const Login = () => {
                   <div className="space-y-1.5">
                      <label
                         htmlFor="password"
-                        className="block text-sm font-semibold text-primary"
+                        className="block text-sm font-medium text-text"
                      >
                         Password
                      </label>

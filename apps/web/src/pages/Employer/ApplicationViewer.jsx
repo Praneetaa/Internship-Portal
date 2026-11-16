@@ -116,7 +116,7 @@ const ApplicationViewer = () => {
             {/* Header */}
             <div className="flex flex-wrap items-start justify-between gap-4">
                <div>
-                  <h1 className="text-2xl font-bold text-primary">
+                  <h1 className="text-2xl font-semibold text-text">
                      Applications
                   </h1>
                   <p className="mt-1 text-sm text-label">
@@ -125,14 +125,14 @@ const ApplicationViewer = () => {
                </div>
                <Link
                   to="/manage-jobs"
-                  className="inline-flex items-center gap-2 rounded-full border border-outline bg-white px-4 py-2 text-sm font-semibold text-primary hover:bg-neutral transition"
+                  className="inline-flex items-center gap-2 rounded-lg border border-outline bg-white px-4 py-2 text-sm font-semibold text-primary hover:bg-neutral transition"
                >
                   ← Manage roles
                </Link>
             </div>
 
             {/* Role selector */}
-            <div className="rounded-2xl border border-outline bg-white/90 p-5 shadow-sm">
+            <div className="rounded-xl border border-outline bg-white p-5">
                <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-label">
                   Viewing applications for
                </p>
@@ -144,7 +144,7 @@ const ApplicationViewer = () => {
                         setQuery("");
                         setStatusFilter("All");
                      }}
-                     className="w-full appearance-none rounded-xl border border-outline bg-white py-3 pl-4 pr-10 text-sm font-semibold text-primary outline-none focus:border-accent focus:ring-2 focus:ring-accent/30"
+                     className="w-full appearance-none rounded-xl border border-outline bg-white py-3 pl-4 pr-10 text-sm font-semibold text-primary outline-none focus:border-primary focus:ring-4 focus:ring-primary/10"
                   >
                      {jobs.length === 0 && (
                         <option value="">No internships found</option>
@@ -188,16 +188,16 @@ const ApplicationViewer = () => {
                      value={query}
                      onChange={(e) => setQuery(e.target.value)}
                      placeholder="Search applicants by name or email…"
-                     className="w-full rounded-xl border border-outline bg-white/90 py-3 pl-11 pr-4 text-sm text-paragraph outline-none shadow-sm focus:border-accent focus:ring-2 focus:ring-accent/30"
+                     className="w-full rounded-xl border border-outline bg-white py-3 pl-11 pr-4 text-sm text-paragraph outline-none focus:border-primary focus:ring-4 focus:ring-primary/10"
                   />
                </div>
             )}
 
             {/* Applications list */}
-            <div className="rounded-2xl border border-outline bg-white/90 shadow-sm overflow-hidden">
+            <div className="rounded-xl border border-outline bg-white overflow-hidden">
                <div className="flex items-center justify-between border-b border-outline px-6 py-4">
                   <div>
-                     <h2 className="text-base font-semibold text-primary">
+                     <h2 className="text-base font-semibold text-text">
                         {selectedJob?.title || "Applicants"}
                      </h2>
                      <p className="text-xs text-label mt-0.5">
@@ -247,7 +247,7 @@ const ApplicationViewer = () => {
                               <div className="flex flex-wrap items-start justify-between gap-4">
                                  {/* Applicant info */}
                                  <div className="flex items-start gap-3 min-w-0">
-                                    <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary/15 to-secondary/15 text-sm font-bold text-primary">
+                                    <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-primary/[0.07] ring-1 ring-inset ring-primary/10 text-sm font-bold text-primary">
                                        {(app.applicant?.name ||
                                           "?")[0].toUpperCase()}
                                     </div>
@@ -284,7 +284,7 @@ const ApplicationViewer = () => {
                                           )
                                        }
                                        disabled={isUpdating}
-                                       className="appearance-none rounded-full border border-outline bg-white py-1.5 pl-3 pr-8 text-xs font-semibold text-primary outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/30 disabled:opacity-60"
+                                       className="appearance-none rounded-lg border border-outline bg-white py-1.5 pl-3 pr-8 text-xs font-semibold text-primary outline-none transition focus:border-primary focus:ring-4 focus:ring-primary/10 disabled:opacity-60"
                                     >
                                        {STATUS_OPTIONS.map((s) => (
                                           <option key={s} value={s}>
@@ -301,7 +301,7 @@ const ApplicationViewer = () => {
                                        href={app.applicant.resume}
                                        target="_blank"
                                        rel="noreferrer"
-                                       className="inline-flex items-center gap-1.5 rounded-full border border-outline bg-white px-3 py-1.5 text-xs font-semibold text-primary hover:bg-neutral transition"
+                                       className="inline-flex items-center gap-1.5 rounded-lg border border-outline bg-white px-3 py-1.5 text-xs font-semibold text-primary hover:bg-neutral transition"
                                     >
                                        <FileText className="h-3.5 w-3.5" />{" "}
                                        Resume
@@ -315,7 +315,7 @@ const ApplicationViewer = () => {
                                  {/* Profile link */}
                                  <Link
                                     to={`/applicants/profile/${applicantId}`}
-                                    className="inline-flex items-center gap-1.5 rounded-full border border-outline bg-white px-3 py-1.5 text-xs font-semibold text-primary hover:bg-neutral transition"
+                                    className="inline-flex items-center gap-1.5 rounded-lg border border-outline bg-white px-3 py-1.5 text-xs font-semibold text-primary hover:bg-neutral transition"
                                  >
                                     View profile
                                  </Link>

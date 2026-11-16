@@ -12,6 +12,9 @@ import {
    unregisterFromEvent,
    getMyRegisteredEvents,
    getEventRegistrants,
+   saveEvent,
+   unsaveEvent,
+   getMySavedEvents,
 } from "../controllers/eventController.js";
 
 const router = Router();
@@ -32,5 +35,8 @@ router.get("/:id/registrants", protect, getEventRegistrants);
 router.post("/:id/register", protect, registerForEvent);
 router.delete("/:id/register", protect, unregisterFromEvent);
 router.get("/candidate/my-registrations", protect, getMyRegisteredEvents);
+router.get("/candidate/saved", protect, getMySavedEvents);
+router.post("/:id/save", protect, saveEvent);
+router.delete("/:id/save", protect, unsaveEvent);
 
 export default router;

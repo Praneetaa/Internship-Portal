@@ -1,5 +1,6 @@
 import Event from "../models/Event.js";
 import EventRegistration from "../models/EventRegistration.js";
+import SavedEvent from "../models/SavedEvent.js";
 
 // @desc  Create an event (organization only)
 export const createEvent = async (req, res) => {
@@ -36,16 +37,30 @@ export const getEvents = async (req, res) => {
          .sort({ date: 1 });
 
       let registeredEventIds = [];
+      let savedEventIds = [];
       if (userId) {
-         const regs = await EventRegistration.find({
-            candidate: userId,
-         }).select("event");
+         const [regs, saved] = await Promise.all([
+            EventRegistration.find({ candidate: userId }).select("event"),
+            SavedEvent.find({ candidate: userId }).select("event"),
+         ]);
          registeredEventIds = regs.map((r) => String(r.event));
+         savedEventIds = saved.map((s) => String(s.event));
       }
+
+      // Registration count per event, so cards can show seats left
+      const counts = await EventRegistration.aggregate([
+         { $match: { event: { $in: events.map((ev) => ev._id) } } },
+         { $group: { _id: "$event", count: { $sum: 1 } } },
+      ]);
+      const countByEvent = Object.fromEntries(
+         counts.map((c) => [String(c._id), c.count]),
+      );
 
       const eventsWithExtras = events.map((ev) => ({
          ...ev.toObject(),
          isRegistered: registeredEventIds.includes(String(ev._id)),
+         isSaved: savedEventIds.includes(String(ev._id)),
+         registrantCount: countByEvent[String(ev._id)] || 0,
       }));
 
       res.json(eventsWithExtras);
@@ -91,19 +106,26 @@ export const getEventById = async (req, res) => {
       if (!event) return res.status(404).json({ message: "Event not found" });
 
       let isRegistered = false;
+      let isSaved = false;
       if (userId) {
-         const reg = await EventRegistration.findOne({
-            event: event._id,
-            candidate: userId,
-         });
+         const [reg, saved] = await Promise.all([
+            EventRegistration.findOne({ event: event._id, candidate: userId }),
+            SavedEvent.findOne({ event: event._id, candidate: userId }),
+         ]);
          isRegistered = !!reg;
+         isSaved = !!saved;
       }
 
       const count = await EventRegistration.countDocuments({
          event: event._id,
       });
 
-      res.json({ ...event.toObject(), isRegistered, registrantCount: count });
+      res.json({
+         ...event.toObject(),
+         isRegistered,
+         isSaved,
+         registrantCount: count,
+      });
    } catch (err) {
       res.status(500).json({ message: err.message });
    }
@@ -242,6 +264,58 @@ export const getEventRegistrants = async (req, res) => {
          event: req.params.id,
       }).populate("candidate", "name email avatar");
       res.json(regs);
+   } catch (err) {
+      res.status(500).json({ message: err.message });
+   }
+};
+
+// @desc  Save an event for later (candidate)
+export const saveEvent = async (req, res) => {
+   try {
+      if (req.user.role !== "candidate")
+         return res.status(403).json({ message: "Only candidates can save events" });
+
+      const event = await Event.findById(req.params.id);
+      if (!event) return res.status(404).json({ message: "Event not found" });
+
+      await SavedEvent.updateOne(
+         { candidate: req.user._id, event: event._id },
+         { $setOnInsert: { candidate: req.user._id, event: event._id } },
+         { upsert: true },
+      );
+      res.status(201).json({ message: "Event saved" });
+   } catch (err) {
+      res.status(500).json({ message: err.message });
+   }
+};
+
+// @desc  Remove a saved event (candidate)
+export const unsaveEvent = async (req, res) => {
+   try {
+      await SavedEvent.deleteOne({
+         candidate: req.user._id,
+         event: req.params.id,
+      });
+      res.json({ message: "Event removed from saved" });
+   } catch (err) {
+      res.status(500).json({ message: err.message });
+   }
+};
+
+// @desc  Get the candidate's saved events
+export const getMySavedEvents = async (req, res) => {
+   try {
+      const saved = await SavedEvent.find({ candidate: req.user._id })
+         .populate({
+            path: "event",
+            populate: {
+               path: "organizer",
+               select: "name companyName companyLogo",
+            },
+         })
+         .sort({ createdAt: -1 });
+      // Skip events that were deleted after being saved
+      res.json(saved.filter((s) => s.event));
    } catch (err) {
       res.status(500).json({ message: err.message });
    }

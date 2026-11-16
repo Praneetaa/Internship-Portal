@@ -53,14 +53,14 @@ const UserProfile = () => {
          <div className="space-y-6">
             <div className="flex flex-wrap items-start justify-between gap-4">
                <div>
-                  <h1 className="text-2xl font-semibold text-primary">
+                  <h1 className="text-2xl font-semibold text-text">
                      {applicant.name}
                   </h1>
                   <p className="mt-1 text-sm text-label">{applicant.email}</p>
                </div>
                <Link
                   to={`/applicants/resume/${id}`}
-                  className="rounded-full border border-outline bg-white px-4 py-2 text-sm font-semibold text-primary hover:bg-neutral"
+                  className="rounded-lg border border-outline bg-white px-4 py-2 text-sm font-semibold text-primary hover:bg-neutral"
                >
                   View resume
                </Link>
@@ -96,7 +96,7 @@ const UserProfile = () => {
                   {applicant.skills.map((skill) => (
                      <span
                         key={skill}
-                        className="rounded-full border border-outline bg-white px-3 py-1 text-xs text-primary"
+                        className="rounded-lg border border-outline bg-white px-3 py-1 text-xs text-primary"
                      >
                         {skill}
                      </span>

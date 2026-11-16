@@ -86,19 +86,19 @@ const CandidateProfile = () => {
       >
          <div className="space-y-6">
             <div>
-               <h1 className="text-2xl font-bold text-primary">My profile</h1>
+               <h1 className="text-2xl font-semibold text-text">My profile</h1>
                <p className="mt-1 text-sm text-label">
                   Keep your profile updated to improve your visibility.
                </p>
             </div>
 
             {/* Profile hero card */}
-            <div className="rounded-2xl border border-outline bg-white/90 shadow-sm overflow-hidden">
-               <div className="h-24 bg-gradient-to-r from-primary to-secondary" />
+            <div className="rounded-xl border border-outline bg-white overflow-hidden">
+               <div className="h-24 bg-primary" />
                <div className="px-6 pb-6">
                   <div className="relative -mt-12 flex items-end justify-between gap-4">
                      <div className="relative">
-                        <div className="h-20 w-20 rounded-2xl border-4 border-white shadow-sm overflow-hidden bg-neutral flex items-center justify-center">
+                        <div className="h-20 w-20 rounded-xl border-4 border-white overflow-hidden bg-neutral flex items-center justify-center">
                            {avatar ? (
                               <img
                                  src={avatar}
@@ -129,7 +129,7 @@ const CandidateProfile = () => {
                      </div>
                   </div>
                   <div className="mt-3">
-                     <h2 className="text-xl font-bold text-primary">{name}</h2>
+                     <h2 className="text-xl font-semibold text-text">{name}</h2>
                      <p className="text-sm text-label mt-0.5">
                         {user?.role === "candidate" ? "Candidate" : "User"}
                      </p>
@@ -139,7 +139,7 @@ const CandidateProfile = () => {
 
             {/* Info grid */}
             <div className="grid gap-4 sm:grid-cols-2">
-               <div className="rounded-2xl border border-outline bg-white/90 p-5 shadow-sm">
+               <div className="rounded-xl border border-outline bg-white p-5">
                   <div className="flex items-center gap-3 mb-4">
                      <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10">
                         <User className="h-4 w-4 text-primary" />
@@ -165,7 +165,7 @@ const CandidateProfile = () => {
                </div>
 
                {/* Resume card */}
-               <div className="rounded-2xl border border-outline bg-white/90 p-5 shadow-sm">
+               <div className="rounded-xl border border-outline bg-white p-5">
                   <div className="flex items-center gap-3 mb-4">
                      <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10">
                         <FileText className="h-4 w-4 text-primary" />
@@ -249,7 +249,7 @@ const CandidateProfile = () => {
             </div>
 
             {/* Account status */}
-            <div className="rounded-2xl border border-outline bg-white/90 p-5 shadow-sm">
+            <div className="rounded-xl border border-outline bg-white p-5">
                <h3 className="text-sm font-semibold text-primary mb-4">
                   Profile completeness
                </h3>
@@ -279,7 +279,7 @@ const CandidateProfile = () => {
                </div>
                <div className="mt-4 h-2 w-full overflow-hidden rounded-full bg-neutral">
                   <div
-                     className="h-full rounded-full bg-gradient-to-r from-primary to-secondary transition-all duration-500"
+                     className="h-full rounded-lg bg-primary transition-all duration-500"
                      style={{
                         width: `${[[true, !!avatar, !!resume].filter(Boolean).length / 3] * 100}%`,
                      }}

@@ -142,13 +142,13 @@ const JobDetails = () => {
                {/* Main content */}
                <div className="space-y-5">
                   {/* Header card */}
-                  <div className="rounded-2xl border border-outline bg-white/90 p-6 shadow-sm">
+                  <div className="rounded-xl border border-outline bg-white p-6">
                      <div className="flex items-start gap-4">
-                        <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/15 to-secondary/15 text-xl font-bold text-primary">
+                        <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-xl bg-primary/[0.07] ring-1 ring-inset ring-primary/10 text-xl font-semibold text-text">
                            {companyInitial}
                         </div>
                         <div className="flex-1 min-w-0">
-                           <h1 className="text-xl font-bold text-primary">
+                           <h1 className="text-xl font-semibold text-text">
                               {job.title}
                            </h1>
                            <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-label">
@@ -207,9 +207,9 @@ const JobDetails = () => {
                      .map((s) => (
                         <div
                            key={s.title}
-                           className="rounded-2xl border border-outline bg-white/90 p-6 shadow-sm"
+                           className="rounded-xl border border-outline bg-white p-6"
                         >
-                           <h2 className="text-base font-semibold text-primary mb-3">
+                           <h2 className="text-base font-semibold text-text mb-3">
                               {s.title}
                            </h2>
                            <p className="text-sm text-paragraph leading-relaxed">
@@ -222,7 +222,7 @@ const JobDetails = () => {
                {/* Sticky sidebar */}
                <div className="space-y-4 lg:sticky lg:top-28 self-start">
                   {/* Apply card */}
-                  <div className="rounded-2xl border border-outline bg-white/90 p-5 shadow-sm">
+                  <div className="rounded-xl border border-outline bg-white p-5">
                      <h3 className="text-sm font-semibold text-primary mb-4">
                         Apply for this role
                      </h3>
@@ -313,7 +313,7 @@ const JobDetails = () => {
                   </div>
 
                   {/* Quick info card */}
-                  <div className="rounded-2xl border border-outline bg-white/90 p-5 shadow-sm">
+                  <div className="rounded-xl border border-outline bg-white p-5">
                      <h3 className="text-sm font-semibold text-primary mb-3">
                         Quick info
                      </h3>
